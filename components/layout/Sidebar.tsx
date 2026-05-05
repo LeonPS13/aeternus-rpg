@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Dice6, User, Map, Table2, BookOpen } from 'lucide-react'
+import { Dice6, User, Map, Table2, BookOpen, X } from 'lucide-react'
 
 interface ToolItem {
   label: string
@@ -19,17 +19,37 @@ const tools: ToolItem[] = [
   { label: 'Mapa de Masmorra',      href: '/tools/dungeon-map',         icon: <Map size={16} />,      active: false },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="flex h-full w-60 flex-col"
+    <aside
+      className={[
+        'fixed inset-y-0 left-0 z-40 flex h-full w-60 flex-col',
+        'transition-transform duration-200 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full',
+        'md:relative md:translate-x-0',
+      ].join(' ')}
       style={{ background: 'var(--color-bg-secondary)', borderRight: '1px solid var(--color-border-default)' }}>
 
       {/* Logo text */}
       <div className="flex flex-col items-center justify-center py-3"
         style={{ borderBottom: '1px solid var(--color-border-default)' }}>
-        <div className="text-center" style={{ lineHeight: 1.1 }}>
+        <div className="relative w-full text-center" style={{ lineHeight: 1.1 }}>
+          {/* Close button — mobile only */}
+          <button
+            onClick={onClose}
+            className="absolute right-2 top-0 rounded p-1 md:hidden"
+            style={{ color: 'var(--color-text-muted)' }}
+            aria-label="Fechar menu"
+          >
+            <X size={16} />
+          </button>
           <p className="text-4xl tracking-widest"
             style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px rgba(201,168,76,0.6)' }}>
             Æternus
@@ -65,6 +85,7 @@ export default function Sidebar() {
               <li key={tool.href}>
                 <Link
                   href={tool.href}
+                  onClick={onClose}
                   className="group flex items-center gap-3 border-l-2 px-3 py-2.5 transition-all duration-150"
                   style={isActive ? {
                     borderLeftColor: 'var(--color-gold)',

@@ -80,8 +80,8 @@ export default function NewEntryModal({ adventureId, authorId, diaryType, initia
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-          <div className="flex gap-3">
-            <div className="w-36 shrink-0">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="w-full sm:w-36 sm:shrink-0">
               <label className="mb-1.5 block text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>Data</label>
               <input
                 type="date"

@@ -47,9 +47,9 @@ export default function DiceRoller() {
         </p>
       </div>
 
-      {/* Combined Panel: controls (left) + current result (right) */}
+      {/* Combined Panel: controls (left/top) + current result (right/bottom) */}
       <div className="arcane-panel mb-6 p-6">
-        <div className="flex gap-8">
+        <div className="flex flex-col gap-8 lg:flex-row">
 
           {/* Left: selector + controls + button */}
           <div className="flex min-w-0 flex-1 flex-col gap-4">
@@ -80,11 +80,12 @@ export default function DiceRoller() {
             </button>
           </div>
 
-          {/* Vertical divider */}
-          <div className="w-px shrink-0 self-stretch" style={{ background: 'var(--color-border-default)' }} />
+          {/* Horizontal divider (mobile) / Vertical divider (desktop) */}
+          <div className="h-px w-full lg:h-auto lg:w-px lg:self-stretch"
+            style={{ background: 'var(--color-border-default)' }} />
 
-          {/* Right: current result */}
-          <div className="flex w-48 shrink-0 flex-col items-center justify-center">
+          {/* Right/Bottom: current result */}
+          <div className="flex w-full flex-col items-center justify-center lg:w-48 lg:shrink-0">
             {isRolling ? (
               <RollingAnimation quantity={quantity} dieType={selectedDie} />
             ) : lastResult ? (
