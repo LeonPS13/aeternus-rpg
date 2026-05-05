@@ -42,26 +42,54 @@ export default function RollHistory({ history, onClear }: RollHistoryProps) {
           return (
             <li
               key={record.id}
-              className="flex items-center justify-between rounded px-4 py-2.5 transition-opacity"
+              className="flex items-center gap-3 rounded px-4 py-2.5 transition-opacity"
               style={{
                 border: '1px solid var(--color-border-default)',
                 background: idx === 0 ? 'var(--color-bg-tertiary)' : 'var(--color-bg-secondary)',
                 opacity: idx === 0 ? 1 : 0.75,
               }}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              {/* Notation + badge */}
+              <div className="flex w-20 shrink-0 flex-col gap-0.5">
+                <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                   {formatNotation(record)}
                 </span>
-                {isCritical && <span className="text-[10px] font-bold" style={{ color: 'var(--color-gold-light)' }}>CRÍTICO</span>}
-                {isFumble   && <span className="text-[10px] font-bold text-red-400">FALHA</span>}
+                {isCritical && <span className="text-xs font-bold" style={{ color: 'var(--color-gold-light)' }}>Crítico</span>}
+                {isFumble   && <span className="text-xs font-bold text-red-400">Falha</span>}
               </div>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-base font-bold"
+
+              {/* Chips */}
+              <div className="flex flex-1 flex-wrap items-center gap-1">
+                {record.rolls.map((roll, i) => (
+                  <span key={i}
+                    className="inline-flex items-center justify-center rounded px-1 py-0 text-base"
+                    style={{
+                      background: 'var(--color-accent)',
+                      border: '1px solid rgba(201,168,76,0.3)',
+                      color: 'var(--color-gold-light)',
+                    }}>
+                    {roll}
+                  </span>
+                ))}
+                {record.modifier !== 0 && (
+                  <span className="inline-flex items-center justify-center rounded px-1 py-0 text-base"
+                    style={{
+                      border: '1px solid rgba(201,168,76,0.4)',
+                      background: 'var(--color-gold-glow)',
+                      color: 'var(--color-gold)',
+                    }}>
+                    {record.modifier > 0 ? `+${record.modifier}` : record.modifier}
+                  </span>
+                )}
+              </div>
+
+              {/* Total + timestamp */}
+              <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <span className="text-2xl leading-none"
                   style={{ color: isCritical ? 'var(--color-gold-light)' : isFumble ? '#f87171' : 'var(--color-text-primary)' }}>
                   {record.total}
                 </span>
-                <span className="w-16 text-right text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                   {getTimeAgo(record.timestamp)}
                 </span>
               </div>

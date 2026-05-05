@@ -8,6 +8,7 @@ import {
   getEntries,
   saveEntry,
   deleteEntry,
+  updateAdventure,
 } from '@/lib/adventure'
 import AdventureHome from './AdventureHome'
 import AdventureView from './AdventureView'
@@ -41,6 +42,11 @@ export default function AdventureDiary() {
     if (selectedId) setEntries(await getEntries(selectedId))
   }
 
+  async function handleEditAdventure(updated: Adventure) {
+    await updateAdventure(updated.id, updated.name, updated.icon ?? 'BookOpen')
+    setAdventures(await getAdventures(playerId))
+  }
+
   async function handleDeleteEntry(id: string) {
     await deleteEntry(id)
     if (selectedId) setEntries(await getEntries(selectedId))
@@ -59,6 +65,7 @@ export default function AdventureDiary() {
         onBack={() => setSelectedId(null)}
         onSaveEntry={handleSaveEntry}
         onDeleteEntry={handleDeleteEntry}
+        onEditAdventure={handleEditAdventure}
       />
     )
   }

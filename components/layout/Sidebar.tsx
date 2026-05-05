@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Dice6, User, Map, Table2, BookOpen } from 'lucide-react'
@@ -27,11 +26,19 @@ export default function Sidebar() {
     <aside className="flex h-full w-60 flex-col"
       style={{ background: 'var(--color-bg-secondary)', borderRight: '1px solid var(--color-border-default)' }}>
 
-      {/* Logo */}
-      <div className="relative overflow-hidden" style={{ borderBottom: '1px solid var(--color-border-default)' }}>
-        <Image src="/logo.png" alt="Aeternus RPG" width={240} height={92} className="w-full object-cover" priority />
-        <div className="absolute inset-x-0 bottom-0 h-6"
-          style={{ background: 'linear-gradient(to top, var(--color-bg-secondary), transparent)' }} />
+      {/* Logo text */}
+      <div className="flex flex-col items-center justify-center py-3"
+        style={{ borderBottom: '1px solid var(--color-border-default)' }}>
+        <div className="text-center" style={{ lineHeight: 1.1 }}>
+          <p className="text-4xl tracking-widest"
+            style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px rgba(201,168,76,0.6)' }}>
+            Æternus
+          </p>
+          <p className="text-4xl tracking-widest"
+            style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px rgba(201,168,76,0.6)' }}>
+            RPG
+          </p>
+        </div>
       </div>
 
       {/* Tools Navigation */}
@@ -45,8 +52,8 @@ export default function Sidebar() {
                 <li key={tool.href}>
                   <span className="flex cursor-not-allowed items-center gap-3 border-l-2 border-transparent px-3 py-2.5 opacity-25">
                     <span style={{ color: 'var(--color-text-muted)' }}>{tool.icon}</span>
-                    <span className="flex-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>{tool.label}</span>
-                    <span className="rounded-sm px-1.5 py-0.5 text-[9px] font-medium"
+                    <span className="flex-1 text-base" style={{ color: 'var(--color-text-muted)' }}>{tool.label}</span>
+                    <span className="rounded-sm px-1.5 py-0.5 text-xs font-medium"
                       style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
                       Em breve
                     </span>
@@ -71,7 +78,7 @@ export default function Sidebar() {
                   <span style={isActive ? { color: 'var(--color-gold)' } : { color: 'var(--color-text-muted)' }}>
                     {tool.icon}
                   </span>
-                  <span className="flex-1 text-sm font-medium">{tool.label}</span>
+                  <span className="flex-1 text-base font-medium">{tool.label}</span>
                 </Link>
               </li>
             )
@@ -81,7 +88,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-3" style={{ borderTop: '1px solid var(--color-border-default)' }}>
-        <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>v0.1.0 — Alpha</p>
+        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>v0.1.0 — Alpha</p>
       </div>
     </aside>
   )

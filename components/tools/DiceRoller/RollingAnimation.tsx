@@ -33,9 +33,9 @@ export default function RollingAnimation({ quantity, dieType }: RollingAnimation
   }, [quantity, sides])
 
   return (
-    <div className="arcane-panel animate-[fade-up_0.25s_ease-out_forwards] p-6">
-      <p className="section-label mb-4">· Rolando {quantity}{dieType}… ·</p>
-      <div className="flex flex-wrap gap-3">
+    <div className="animate-[fade-up_0.25s_ease-out_forwards]">
+      <p className="section-label mb-4 text-center">· Rolando {quantity}{dieType}… ·</p>
+      <div className="flex flex-wrap justify-center gap-3">
         {values.map((val, idx) => (
           <div
             key={idx}
@@ -55,7 +55,7 @@ export default function RollingAnimation({ quantity, dieType }: RollingAnimation
             >
               {val}
             </span>
-            <span className="text-[9px] font-bold tracking-widest" style={{ color: 'var(--color-gold-dark)' }}>
+            <span className="text-xs font-bold tracking-widest" style={{ color: 'var(--color-gold-dark)' }}>
               {DIE_LABEL[dieType]}
             </span>
           </div>

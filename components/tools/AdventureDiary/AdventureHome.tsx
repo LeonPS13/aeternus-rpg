@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, LogIn, Copy, Check, Crown, User, BookOpen, Trash2, LogOut } from 'lucide-react'
+import { Plus, LogIn, Copy, Check, BookOpen, Trash2, LogOut } from 'lucide-react'
 import type { Adventure } from '@/types/adventure'
 import { generateAdventureId, saveAdventure, getAdventures, findAdventure, deleteAdventure, leaveAdventure } from '@/lib/adventure'
+import { IconPicker, getAdventureIcon } from './adventureIcons'
 
 interface AdventureHomeProps {
   adventures: Adventure[]
@@ -21,15 +22,16 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
   const [isCreating, setIsCreating] = useState(false)
   const [isJoining, setIsJoining]   = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [newIcon, setNewIcon]       = useState('BookOpen')
 
   async function handleCreate() {
     const name = newName.trim()
     if (!name || isCreating) return
     setIsCreating(true)
-    const adventure: Adventure = { id: generateAdventureId(), name, masterId: playerId, createdAt: new Date().toISOString() }
+    const adventure: Adventure = { id: generateAdventureId(), name, masterId: playerId, createdAt: new Date().toISOString(), icon: newIcon }
     await saveAdventure(adventure, playerId)
     onAdventuresChange(await getAdventures(playerId))
-    setNewName(''); setIsCreating(false); onSelect(adventure.id)
+    setNewName(''); setNewIcon('BookOpen'); setIsCreating(false); onSelect(adventure.id)
   }
 
   async function handleJoin() {
@@ -69,12 +71,7 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
     <div className="mx-auto w-full max-w-2xl px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="rounded p-1" style={{ background: 'var(--color-gold-glow)' }}>
-            <BookOpen size={14} style={{ color: 'var(--color-gold)' }} />
-          </span>
-          <h1 className="text-3xl" style={{ color: 'var(--color-text-primary)' }}>Diário de Aventura</h1>
-        </div>
+        <h1 className="mb-1 text-3xl" style={{ color: 'var(--color-text-primary)' }}>Diário de Aventura</h1>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Crie uma aventura ou entre com o código do Mestre.</p>
       </div>
 
@@ -91,6 +88,10 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
             className="mb-3 w-full px-3 py-2 text-sm outline-none"
             style={{ ...inputStyle, caretColor: 'var(--color-gold)' }}
           />
+          <div className="mb-3">
+            <p className="section-label mb-2">· Ícone ·</p>
+            <IconPicker value={newIcon} onChange={setNewIcon} />
+          </div>
           <button onClick={handleCreate} disabled={!newName.trim() || isCreating}
             className="arcane-btn flex w-full items-center justify-center gap-2 py-2 text-sm font-semibold">
             {isCreating ? <span className="animate-pulse">Criando…</span> : <><Plus size={14} /> Criar como Mestre</>}
@@ -102,14 +103,14 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
           <p className="section-label mb-3">· Entrar numa Aventura ·</p>
           <input
             value={joinCode}
-            onChange={(e) => { setJoinCode(e.target.value); setJoinError('') }}
+            onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError('') }}
             onKeyDown={(e) => { if (e.key === 'Enter') handleJoin() }}
             placeholder="Código (ex: AB12CD)…"
             maxLength={6}
-            className="mb-3 w-full px-3 py-2 font-mono text-sm uppercase tracking-widest outline-none"
+            className="mb-3 w-full px-3 py-2 font-mono text-sm tracking-widest outline-none"
             style={{ ...inputStyle, caretColor: 'var(--color-gold)' }}
           />
-          {joinError && <p className="mb-2 text-[11px] text-red-400">{joinError}</p>}
+          {joinError && <p className="mb-2 text-xs text-red-400">{joinError}</p>}
           <button onClick={handleJoin} disabled={!joinCode.trim() || isJoining}
             className="flex w-full items-center justify-center gap-2 rounded py-2 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50"
             style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-secondary)' }}>
@@ -129,20 +130,20 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
               const isDeleting = deletingId === adv.id
               return (
                 <li key={adv.id}>
-                  <div className="group flex w-full items-center gap-3 rounded px-4 py-3 transition-all"
+                  <div className="group flex w-full items-center gap-3 rounded px-3 py-2 transition-all"
                     style={{ border: '1px solid var(--color-border-default)', background: 'var(--color-bg-secondary)' }}>
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded"
                       style={{ background: 'var(--color-gold-glow)', color: 'var(--color-gold)' }}>
-                      {isMaster ? <Crown size={14} /> : <User size={14} />}
+                      {(() => { const Icon = getAdventureIcon(adv.icon); return <Icon size={14} /> })()}
                     </div>
 
                     <button onClick={() => onSelect(adv.id)} className="flex-1 min-w-0 text-left">
-                      <p className="truncate text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{adv.name}</p>
-                      <p className="font-mono text-[11px]" style={{ color: 'var(--color-text-muted)' }}>{adv.id}</p>
+                      <p className="truncate text-xl" style={{ color: 'var(--color-text-primary)' }}>{adv.name}</p>
+                      <p className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>{adv.id}</p>
                     </button>
 
                     <div className="flex items-center gap-1.5">
-                      <span className="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                      <span className="rounded px-2 py-0.5 text-xs font-bold tracking-wide"
                         style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)', background: 'var(--color-gold-glow)' }}>
                         {isMaster ? 'Mestre' : 'Jogador'}
                       </span>
@@ -156,7 +157,7 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
                       </button>
                       {isConfirming ? (
                         <div className="flex items-center gap-1">
-                          <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                             {isMaster ? 'Excluir?' : 'Sair?'}
                           </span>
                           <button onClick={() => handleRemove(adv)} disabled={isDeleting}

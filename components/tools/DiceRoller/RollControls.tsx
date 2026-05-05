@@ -27,7 +27,7 @@ export default function RollControls({ quantity, modifier, onQuantityChange, onM
             style={btnStyle}>
             <Minus size={14} />
           </button>
-          <span className="w-12 text-center text-xl font-bold tabular-nums"
+          <span className="w-12 text-center text-3xl tabular-nums"
             style={{ color: 'var(--color-text-primary)' }}>
             {quantity}
           </span>
@@ -49,7 +49,7 @@ export default function RollControls({ quantity, modifier, onQuantityChange, onM
             style={btnStyle}>
             <Minus size={14} />
           </button>
-          <span className="w-12 text-center text-xl font-bold tabular-nums"
+          <span className="w-12 text-center text-3xl tabular-nums"
             style={{ color: 'var(--color-text-primary)' }}>
             {modifier === 0 ? '0' : modifier > 0 ? `+${modifier}` : `${modifier}`}
           </span>

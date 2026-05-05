@@ -36,11 +36,11 @@ export default function EntryCard({ entry, canEdit, searchQuery, onDelete, onEdi
   const isLong = entry.summary.length > 240
 
   return (
-    <div className="arcane-panel animate-[fade-up_0.3s_ease-out_forwards] p-5 transition-colors">
+    <div className="arcane-panel animate-[fade-up_0.3s_ease-out_forwards] px-3 py-2 transition-colors">
       {/* Header */}
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex-1">
-          <h3 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+          <h3 className="text-2xl font-normal" style={{ color: 'var(--color-text-primary)' }}>
             {highlight(entry.title, searchQuery)}
           </h3>
           <div className="mt-0.5 flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-text-muted)' }}>
@@ -72,7 +72,7 @@ export default function EntryCard({ entry, canEdit, searchQuery, onDelete, onEdi
           {entry.tags.map((tag) => {
             const isMatch = searchQuery && tag.toLowerCase().includes(searchQuery.toLowerCase())
             return (
-              <span key={tag} className="rounded px-2 py-0.5 text-[11px] font-medium"
+              <span key={tag} className="rounded px-2 py-0.5 text-xs font-medium"
                 style={isMatch ? {
                   border: '1px solid rgba(201,168,76,0.5)',
                   background: 'rgba(201,168,76,0.15)',

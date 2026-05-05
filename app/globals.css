@@ -15,13 +15,13 @@
 }
 
 :root {
-  --background: #0A0806;
+  --background: #181208;
   --foreground: #F0E6CC;
 
-  --color-bg-primary: #0A0806;
-  --color-bg-secondary: #110E09;
-  --color-bg-tertiary: #1A1510;
-  --color-bg-mortar: #0D0B08;
+  --color-bg-primary: #181208;
+  --color-bg-secondary: #261C0E;
+  --color-bg-tertiary: #322412;
+  --color-bg-mortar: #100D06;
 
   --color-gold: #C9A84C;
   --color-gold-light: #E8C96A;
@@ -35,7 +35,7 @@
   --color-text-secondary: #A89060;
   --color-text-muted: #6A5830;
 
-  --color-border-default: rgba(201, 168, 76, 0.2);
+  --color-border-default: rgba(201, 168, 76, 0.3);
   --color-border-hover: rgba(201, 168, 76, 0.5);
   --color-border-active: #C9A84C;
 }
@@ -44,7 +44,11 @@
   box-sizing: border-box;
 }
 
-html,
+html {
+  font-size: 18px;
+  height: 100%;
+}
+
 body {
   height: 100%;
 }
@@ -128,10 +132,9 @@ body {
 
 /* ── Section label ──────────────────────────────────────────── */
 .section-label {
-  font-size: 9px;
-  letter-spacing: 4px;
+  font-size: 18px;
+  letter-spacing: 2px;
   color: var(--color-gold-dark);
-  text-transform: uppercase;
 }
 
 /* ── Scrollbar ──────────────────────────────────────────────── */

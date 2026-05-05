@@ -22,7 +22,7 @@ export function getPlayerId(): string {
 export async function getAdventures(playerId: string): Promise<Adventure[]> {
   const { data, error } = await supabase
     .from('adventure_memberships')
-    .select('adventures(id, name, master_id, created_at)')
+    .select('adventures(id, name, master_id, created_at, icon)')
     .eq('player_id', playerId)
 
   if (error || !data) return []
@@ -35,13 +35,14 @@ export async function getAdventures(playerId: string): Promise<Adventure[]> {
       name: a.name,
       masterId: a.master_id,
       createdAt: a.created_at,
+      icon: a.icon ?? 'BookOpen',
     }))
 }
 
 export async function findAdventure(id: string): Promise<Adventure | null> {
   const { data, error } = await supabase
     .from('adventures')
-    .select('id, name, master_id, created_at')
+    .select('id, name, master_id, created_at, icon')
     .eq('id', id)
     .single()
 
@@ -52,16 +53,27 @@ export async function findAdventure(id: string): Promise<Adventure | null> {
     name: data.name,
     masterId: data.master_id,
     createdAt: data.created_at,
+    icon: data.icon ?? 'BookOpen',
   }
 }
 
 export async function saveAdventure(adventure: Adventure, playerId: string): Promise<void> {
-  await supabase.from('adventures').upsert({
+  const { error } = await supabase.from('adventures').upsert({
     id: adventure.id,
     name: adventure.name,
     master_id: adventure.masterId,
     created_at: adventure.createdAt,
+    icon: adventure.icon ?? 'BookOpen',
   })
+
+  if (error) {
+    await supabase.from('adventures').upsert({
+      id: adventure.id,
+      name: adventure.name,
+      master_id: adventure.masterId,
+      created_at: adventure.createdAt,
+    })
+  }
 
   await supabase.from('adventure_memberships').upsert({
     adventure_id: adventure.id,
@@ -105,6 +117,13 @@ export async function saveEntry(entry: DiaryEntry): Promise<void> {
     created_at: entry.createdAt,
     updated_at: entry.updatedAt,
   })
+}
+
+export async function updateAdventure(id: string, name: string, icon: string): Promise<void> {
+  const { error } = await supabase.from('adventures').update({ name, icon }).eq('id', id)
+  if (error) {
+    await supabase.from('adventures').update({ name }).eq('id', id)
+  }
 }
 
 export async function deleteEntry(id: string): Promise<void> {

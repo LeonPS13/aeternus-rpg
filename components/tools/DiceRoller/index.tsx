@@ -8,7 +8,6 @@ import RollControls from './RollControls'
 import RollResult from './RollResult'
 import RollingAnimation from './RollingAnimation'
 import RollHistory from './RollHistory'
-import { Sparkles } from 'lucide-react'
 
 const MAX_HISTORY = 20
 
@@ -42,50 +41,66 @@ export default function DiceRoller() {
     <div className="mx-auto w-full max-w-3xl px-6 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="mb-1 flex items-center gap-2">
-          <span className="rounded p-1" style={{ background: 'var(--color-gold-glow)' }}>
-            <Sparkles size={14} style={{ color: 'var(--color-gold)' }} />
-          </span>
-          <h1 className="text-3xl" style={{ color: 'var(--color-text-primary)' }}>Rolador de Dados</h1>
-        </div>
+        <h1 className="mb-1 text-3xl" style={{ color: 'var(--color-text-primary)' }}>Rolador de Dados</h1>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
           Selecione o dado, defina a quantidade e modificador, então role.
         </p>
       </div>
 
-      {/* Main Card */}
-      <div className="arcane-panel mb-6 space-y-6 p-6">
-        <DiceSelector selectedDie={selectedDie} isRolling={isRolling} onSelect={setSelectedDie} />
+      {/* Combined Panel: controls (left) + current result (right) */}
+      <div className="arcane-panel mb-6 p-6">
+        <div className="flex gap-8">
 
-        <div className="ornament-divider" />
+          {/* Left: selector + controls + button */}
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <DiceSelector selectedDie={selectedDie} isRolling={isRolling} onSelect={setSelectedDie} />
 
-        <RollControls
-          quantity={quantity}
-          modifier={modifier}
-          onQuantityChange={setQuantity}
-          onModifierChange={setModifier}
-        />
+            <div className="ornament-divider">
+              <div className="ornament-line" />
+              <div className="ornament-diamond" />
+              <div className="ornament-line" />
+            </div>
 
-        {/* Roll Button */}
-        <button
-          onClick={handleRoll}
-          onKeyDown={handleKeyDown}
-          disabled={isRolling}
-          className="arcane-btn w-full py-4 font-bold"
-        >
-          <span className="flex items-center justify-center gap-2 text-base">
+            <RollControls
+              quantity={quantity}
+              modifier={modifier}
+              onQuantityChange={setQuantity}
+              onModifierChange={setModifier}
+            />
+
+            <button
+              onClick={handleRoll}
+              onKeyDown={handleKeyDown}
+              disabled={isRolling}
+              className="arcane-btn w-full py-2.5"
+            >
+              <span className="flex items-center justify-center gap-2 text-3xl leading-none">
+                {isRolling ? 'Rolando…' : `Rolar ${notation}`}
+              </span>
+            </button>
+          </div>
+
+          {/* Vertical divider */}
+          <div className="w-px shrink-0 self-stretch" style={{ background: 'var(--color-border-default)' }} />
+
+          {/* Right: current result */}
+          <div className="flex w-48 shrink-0 flex-col items-center justify-center">
             {isRolling ? (
-              <><span className="animate-spin text-lg">⚄</span> Rolando…</>
+              <RollingAnimation quantity={quantity} dieType={selectedDie} />
+            ) : lastResult ? (
+              <RollResult result={lastResult} />
             ) : (
-              <><span className="text-lg">⚄</span> Rolar {notation}</>
+              <div className="flex flex-col items-center gap-3 py-8 text-center">
+                <span className="text-5xl" style={{ color: 'var(--color-gold)', opacity: 0.15 }}>⚄</span>
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                  Role os dados para ver o resultado
+                </p>
+              </div>
             )}
-          </span>
-        </button>
-      </div>
+          </div>
 
-      {/* Result / Animation */}
-      {isRolling && <RollingAnimation quantity={quantity} dieType={selectedDie} />}
-      {!isRolling && lastResult && <RollResult result={lastResult} />}
+        </div>
+      </div>
 
       {/* History */}
       <div className="mt-6">

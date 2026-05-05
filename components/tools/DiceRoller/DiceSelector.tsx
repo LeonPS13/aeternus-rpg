@@ -29,7 +29,7 @@ export default function DiceSelector({ selectedDie, isRolling, onSelect }: DiceS
             <button
               key={die.type}
               onClick={() => onSelect(die.type)}
-              className="group relative flex flex-col items-center justify-center gap-1 rounded py-3 transition-all duration-200 focus:outline-none"
+              className="group relative flex flex-col items-center justify-center gap-0.5 rounded py-1.5 transition-all duration-200 focus:outline-none"
               style={isSelected ? {
                 border: '1px solid var(--color-gold)',
                 background: 'var(--color-gold-glow)',
@@ -40,7 +40,7 @@ export default function DiceSelector({ selectedDie, isRolling, onSelect }: DiceS
               }}
             >
               <span
-                className={`text-lg font-bold transition-all duration-200 ${
+                className={`text-xl font-bold transition-all duration-200 ${
                   isSelected && isRolling ? 'animate-[roll-spin_0.6s_cubic-bezier(0.4,0,0.2,1)]' : ''
                 }`}
                 style={{ color: isSelected ? 'var(--color-gold)' : 'var(--color-text-muted)' }}
@@ -48,7 +48,7 @@ export default function DiceSelector({ selectedDie, isRolling, onSelect }: DiceS
                 {die.shape}
               </span>
               <span
-                className="text-[11px] font-bold tracking-wide"
+                className="text-lg tracking-wide"
                 style={{ color: isSelected ? 'var(--color-gold-light)' : 'var(--color-text-muted)' }}
               >
                 {die.label}

@@ -40,7 +40,7 @@ Animações customizadas definidas em `globals.css` via `@keyframes`: `fade-up`,
 
 ```
 app/
-  globals.css                  Tailwind v4 + keyframes + noise texture
+  globals.css                  Tailwind v4 + keyframes + noise texture + CSS vars
   layout.tsx                   Root layout
   tools/
     dice-roller/page.tsx
@@ -49,11 +49,13 @@ app/
 components/
   layout/
     AppLayout.tsx              Sidebar + main com ambient glow
-    Sidebar.tsx                Nav lateral com logo e ferramentas
+    Sidebar.tsx                Nav lateral com logo "Æternus / RPG" e ferramentas
 
   tools/
     DiceRoller/                Rolador de dados completo
     AdventureDiary/            Diário de aventura (Supabase)
+      adventureIcons.tsx       Lista de 18 ícones RPG + componente IconPicker
+      EditAdventureModal.tsx   Modal para editar nome e ícone da aventura
 
 lib/
   supabase.ts                  Client Supabase singleton (createClient)
@@ -63,9 +65,6 @@ lib/
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
   adventure.ts                 Adventure, DiaryEntry, ActiveTab
-
-public/
-  logo.png                     Logo Aeternus RPG (pedra escura, letras douradas, glow teal)
 
 .env.local                     NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY (não commitado)
 ```
@@ -80,9 +79,16 @@ public/
 
 | Tabela | Descrição |
 |---|---|
-| `adventures` | id (text PK, 6 chars), name, master_id, created_at |
+| `adventures` | id (text PK, 6 chars), name, master_id, created_at, icon (text, default 'BookOpen') |
 | `adventure_memberships` | adventure_id + player_id (PK composta) — controla quem tem acesso |
 | `diary_entries` | id (uuid), adventure_id, date, title, summary, tags[], author_id, diary_type, created_at, updated_at |
+
+**Migração pendente** (rodar no SQL Editor do Supabase se coluna `icon` ainda não existir):
+```sql
+ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'BookOpen';
+```
+
+O código já tem fallback resiliente: tenta upsert com `icon`, e se falhar (coluna inexistente) refaz sem o campo.
 
 RLS habilitado com políticas abertas (MVP sem autenticação).
 
@@ -100,20 +106,40 @@ RLS habilitado com políticas abertas (MVP sem autenticação).
 | `deleteAdventure(adventureId)` | async — mestre exclui tudo (cascade) |
 | `leaveAdventure(adventureId, playerId)` | async — jogador remove só sua membership |
 | `getEntries(adventureId)` | async |
+| `updateAdventure(id, name, icon)` | async — edição de nome/ícone pelo mestre |
 | `saveEntry(entry)` | async — upsert por id |
 | `deleteEntry(id)` | async |
 
 ---
 
-## Identidade Visual
+## Identidade Visual — Grimório Arcano
 
-- **Fundo**: `bg-slate-950` / `bg-slate-900`
-- **CTAs primários**: `bg-gradient-to-r from-amber-600 to-orange-700`
-- **Links ativos**: `border-amber-500/30 bg-amber-500/10 text-amber-300`
-- **Acentos secundários** (busca, tags, rune glow): cyan/teal — `text-cyan-400`, `bg-cyan-500/10`
-- **Ambient glow**: teal sutil no topo direito, amber no canto inferior esquerdo (`AppLayout.tsx`)
-- **Sidebar**: gradiente `from-slate-900 to-slate-950`, borda `border-amber-700/20`
-- **Evitar**: violet, purple, blue como acento primário — inconsistente com o logo
+Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar classes Tailwind de cor** — usar `style={{ color: 'var(--color-*)' }}`.
+
+| Variável | Valor | Uso |
+|---|---|---|
+| `--color-bg-primary` | `#181208` | Fundo da página |
+| `--color-bg-secondary` | `#261C0E` | Painéis, sidebar |
+| `--color-bg-tertiary` | `#322412` | Inputs, chips |
+| `--color-gold` | `#C9A84C` | Bordas ativas, ícones |
+| `--color-gold-light` | `#E8C96A` | Texto em destaque |
+| `--color-gold-dark` | `#8B6914` | Labels de seção |
+| `--color-gold-glow` | `rgba(201,168,76,0.15)` | Backgrounds sutis |
+| `--color-accent` | `#7B1E1E` | Botão primário (vermelho escuro) |
+| `--color-text-primary` | `#F0E6CC` | Texto principal |
+| `--color-text-secondary` | `#A89060` | Texto secundário |
+| `--color-text-muted` | `#6A5830` | Texto apagado, placeholders |
+| `--color-border-default` | `rgba(201,168,76,0.3)` | Bordas padrão |
+
+**Classes CSS globais:**
+- `.arcane-panel` — card com ornamentos de canto dourados
+- `.arcane-btn` — botão com clip-path octogonal e gradiente vermelho
+- `.ornament-divider` — divisor com linhas e diamante dourado
+- `.section-label` — label de seção em 18px, letra dourada
+
+**Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 18px }` escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
+
+**Logo sidebar:** "Æternus" / "RPG" em texto, `text-4xl tracking-widest`, sem imagem.
 
 ---
 

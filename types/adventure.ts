@@ -3,6 +3,7 @@ export interface Adventure {
   name: string
   masterId: string
   createdAt: string
+  icon?: string
 }
 
 export interface DiaryEntry {

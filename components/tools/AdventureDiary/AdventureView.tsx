@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ArrowLeft, Copy, Check, Plus, BookOpen, User, Crown, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Copy, Check, Plus, BookOpen, User, Crown, ShieldAlert, Pencil } from 'lucide-react'
 import type { Adventure, DiaryEntry, ActiveTab } from '@/types/adventure'
 import SearchBar from './SearchBar'
 import EntryCard from './EntryCard'
 import NewEntryModal from './NewEntryModal'
+import EditAdventureModal from './EditAdventureModal'
+import { getAdventureIcon } from './adventureIcons'
 
 interface AdventureViewProps {
   adventure: Adventure
@@ -14,14 +16,18 @@ interface AdventureViewProps {
   onBack: () => void
   onSaveEntry: (entry: DiaryEntry) => void
   onDeleteEntry: (id: string) => void
+  onEditAdventure: (updated: Adventure) => void
 }
 
-export default function AdventureView({ adventure, entries, playerId, onBack, onSaveEntry, onDeleteEntry }: AdventureViewProps) {
+export default function AdventureView({ adventure, entries, playerId, onBack, onSaveEntry, onDeleteEntry, onEditAdventure }: AdventureViewProps) {
   const [activeTab, setActiveTab]       = useState<ActiveTab>('adventure')
   const [searchQuery, setSearchQuery]   = useState('')
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null)
   const [modalOpen, setModalOpen]       = useState(false)
+  const [editOpen, setEditOpen]         = useState(false)
   const [copiedId, setCopiedId]         = useState(false)
+
+  const AdventureIcon = getAdventureIcon(adventure.icon)
 
   const isMaster = adventure.masterId === playerId
 
@@ -52,7 +58,18 @@ export default function AdventureView({ adventure, entries, playerId, onBack, on
         </button>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl" style={{ color: 'var(--color-text-primary)' }}>{adventure.name}</h1>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded"
+                style={{ background: 'var(--color-gold-glow)', color: 'var(--color-gold)' }}>
+                <AdventureIcon size={16} />
+              </div>
+              <h1 className="text-2xl" style={{ color: 'var(--color-text-primary)' }}>{adventure.name}</h1>
+              {isMaster && (
+                <button onClick={() => setEditOpen(true)} className="rounded p-1 transition-colors" style={{ color: 'var(--color-text-muted)' }} title="Editar aventura">
+                  <Pencil size={13} />
+                </button>
+              )}
+            </div>
             <div className="mt-1 flex items-center gap-2">
               <span className="font-mono text-xs" style={{ color: 'var(--color-text-muted)' }}>Código: {adventure.id}</span>
               <button onClick={copyCode} style={{ color: 'var(--color-text-muted)' }} title="Copiar código">
@@ -60,7 +77,7 @@ export default function AdventureView({ adventure, entries, playerId, onBack, on
                   ? <Check size={12} style={{ color: 'var(--color-gold)' }} />
                   : <Copy size={12} />}
               </button>
-              <span className="rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+              <span className="rounded px-2 py-0.5 text-xs font-bold tracking-wide"
                 style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)', background: 'var(--color-gold-glow)' }}>
                 {isMaster ? <><Crown size={9} className="inline mr-0.5" />Mestre</> : <><User size={9} className="inline mr-0.5" />Jogador</>}
               </span>
@@ -150,6 +167,14 @@ export default function AdventureView({ adventure, entries, playerId, onBack, on
             </button>
           )}
         </div>
+      )}
+
+      {editOpen && (
+        <EditAdventureModal
+          adventure={adventure}
+          onSave={(updated) => { onEditAdventure(updated); setEditOpen(false) }}
+          onClose={() => setEditOpen(false)}
+        />
       )}
 
       {modalOpen && (
