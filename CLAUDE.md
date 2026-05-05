@@ -2,7 +2,7 @@
 
 # Aeternus RPG
 
-SaaS de ferramentas para RPG de mesa. Stack: Next.js 16.2.4 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Lucide React.
+SaaS de ferramentas para RPG de mesa. Stack: Next.js 16.2.4 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Lucide React, Supabase.
 
 ---
 
@@ -53,11 +53,12 @@ components/
 
   tools/
     DiceRoller/                Rolador de dados completo
-    AdventureDiary/            Diário de aventura (localStorage MVP)
+    AdventureDiary/            Diário de aventura (Supabase)
 
 lib/
+  supabase.ts                  Client Supabase singleton (createClient)
   dice.ts                      Lógica de rolagem (crypto.getRandomValues + rejection sampling)
-  adventure.ts                 CRUD localStorage para Adventure/DiaryEntry
+  adventure.ts                 CRUD Supabase para Adventure/DiaryEntry
 
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
@@ -65,7 +66,42 @@ types/
 
 public/
   logo.png                     Logo Aeternus RPG (pedra escura, letras douradas, glow teal)
+
+.env.local                     NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY (não commitado)
 ```
+
+---
+
+## Supabase
+
+**Projeto:** `zgebucfjvvctunnpdijn` (conta separada, não conectada ao MCP do Claude)
+
+**Tabelas:**
+
+| Tabela | Descrição |
+|---|---|
+| `adventures` | id (text PK, 6 chars), name, master_id, created_at |
+| `adventure_memberships` | adventure_id + player_id (PK composta) — controla quem tem acesso |
+| `diary_entries` | id (uuid), adventure_id, date, title, summary, tags[], author_id, diary_type, created_at, updated_at |
+
+RLS habilitado com políticas abertas (MVP sem autenticação).
+
+**Identidade do jogador:** UUID gerado na primeira visita, persistido em `localStorage['aeternus_player_id']`. Distingue mestre de jogador sem Supabase Auth.
+
+**Funções em `lib/adventure.ts`:**
+
+| Função | Descrição |
+|---|---|
+| `getPlayerId()` | sync — localStorage |
+| `generateAdventureId()` | sync — 6 chars, charset sem ambiguidade |
+| `getAdventures(playerId)` | async — via adventure_memberships JOIN |
+| `findAdventure(id)` | async — busca por código para entrar |
+| `saveAdventure(adv, playerId)` | async — upsert adventure + membership |
+| `deleteAdventure(adventureId)` | async — mestre exclui tudo (cascade) |
+| `leaveAdventure(adventureId, playerId)` | async — jogador remove só sua membership |
+| `getEntries(adventureId)` | async |
+| `saveEntry(entry)` | async — upsert por id |
+| `deleteEntry(id)` | async |
 
 ---
 
@@ -96,24 +132,13 @@ public/
 
 ---
 
-## localStorage (Adventure Diary)
-
-| Chave | Conteúdo |
-|---|---|
-| `aeternus_player_id` | UUID gerado na primeira visita — distingue mestre de jogador |
-| `aeternus_adventures` | `Adventure[]` JSON |
-| `aeternus_entries` | `DiaryEntry[]` JSON |
-
-Helpers em `lib/adventure.ts`. Arquitetura pronta para migração ao Supabase.
-
----
-
 ## Regras de código
 
 - Dados rolados com `crypto.getRandomValues()` + rejection sampling (sem `Math.random()`)
 - Sem comentários a menos que o WHY seja não-óbvio
-- `FormEvent` do React está deprecado no React 19 — usar `React.SyntheticEvent` ou `React.FormEvent` inline sem importar
-- Sem `useEffect` para sync de estado com localStorage — escrita síncrona direta
+- `FormEvent` do React está deprecado no React 19 — usar `React.SyntheticEvent` inline sem importar
+- Todas as funções de lib/adventure.ts são async (exceto `getPlayerId` e `generateAdventureId`)
+- Mapeamento snake_case (DB) ↔ camelCase (TypeScript) feito nas funções de lib
 
 ---
 

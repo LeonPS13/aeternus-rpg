@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, LogIn, Copy, Check, Crown, User, BookOpen } from 'lucide-react'
+import { Plus, LogIn, Copy, Check, Crown, User, BookOpen, Trash2, LogOut } from 'lucide-react'
 import type { Adventure } from '@/types/adventure'
-import { generateAdventureId, saveAdventure, getAdventures } from '@/lib/adventure'
+import { generateAdventureId, saveAdventure, getAdventures, findAdventure, deleteAdventure, leaveAdventure } from '@/lib/adventure'
 
 interface AdventureHomeProps {
   adventures: Adventure[]
@@ -17,40 +17,61 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
   const [joinCode, setJoinCode] = useState('')
   const [joinError, setJoinError] = useState('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [isJoining, setIsJoining] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  function handleCreate() {
+  async function handleCreate() {
     const name = newName.trim()
-    if (!name) return
+    if (!name || isCreating) return
+    setIsCreating(true)
     const adventure: Adventure = {
       id: generateAdventureId(),
       name,
       masterId: playerId,
       createdAt: new Date().toISOString(),
     }
-    saveAdventure(adventure)
-    onAdventuresChange(getAdventures())
+    await saveAdventure(adventure, playerId)
+    const updated = await getAdventures(playerId)
+    onAdventuresChange(updated)
     setNewName('')
+    setIsCreating(false)
     onSelect(adventure.id)
   }
 
-  function handleJoin() {
+  async function handleJoin() {
     setJoinError('')
     const code = joinCode.trim().toUpperCase()
-    if (!code) return
+    if (!code || isJoining) return
+    setIsJoining(true)
 
-    const all = getAdventures()
-    const found = all.find((a) => a.id === code)
+    const found = await findAdventure(code)
     if (!found) {
       setJoinError('Código não encontrado. Verifique e tente novamente.')
+      setIsJoining(false)
       return
     }
-    const alreadyIn = adventures.some((a) => a.id === code)
-    if (!alreadyIn) {
-      saveAdventure(found)
-      onAdventuresChange(getAdventures())
-    }
+
+    await saveAdventure(found, playerId)
+    const updated = await getAdventures(playerId)
+    onAdventuresChange(updated)
     setJoinCode('')
+    setIsJoining(false)
     onSelect(found.id)
+  }
+
+  async function handleRemove(adv: Adventure) {
+    setDeletingId(adv.id)
+    if (adv.masterId === playerId) {
+      await deleteAdventure(adv.id)
+    } else {
+      await leaveAdventure(adv.id, playerId)
+    }
+    const updated = await getAdventures(playerId)
+    onAdventuresChange(updated)
+    setConfirmId(null)
+    setDeletingId(null)
   }
 
   function copyId(id: string) {
@@ -86,10 +107,10 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
           />
           <button
             onClick={handleCreate}
-            disabled={!newName.trim()}
+            disabled={!newName.trim() || isCreating}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-600 to-orange-700 py-2 text-sm font-semibold text-white transition-all hover:from-amber-500 hover:to-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Plus size={14} /> Criar como Mestre
+            {isCreating ? <span className="animate-pulse">Criando…</span> : <><Plus size={14} /> Criar como Mestre</>}
           </button>
         </div>
 
@@ -107,10 +128,10 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
           {joinError && <p className="mb-2 text-[11px] text-red-400">{joinError}</p>}
           <button
             onClick={handleJoin}
-            disabled={!joinCode.trim()}
+            disabled={!joinCode.trim() || isJoining}
             className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700 py-2 text-sm font-semibold text-slate-300 transition-all hover:border-slate-600 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <LogIn size={14} /> Entrar como Jogador
+            {isJoining ? <span className="animate-pulse">Verificando…</span> : <><LogIn size={14} /> Entrar como Jogador</>}
           </button>
         </div>
       </div>
@@ -122,23 +143,32 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
           <ul className="space-y-2">
             {adventures.map((adv) => {
               const isMaster = adv.masterId === playerId
+              const isConfirming = confirmId === adv.id
+              const isDeleting = deletingId === adv.id
+
               return (
                 <li key={adv.id}>
-                  <button
-                    onClick={() => onSelect(adv.id)}
-                    className="group flex w-full items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 text-left transition-all hover:border-slate-700 hover:bg-slate-800/60"
-                  >
+                  <div className="group flex w-full items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3 transition-all hover:border-slate-700 hover:bg-slate-800/60">
+                    {/* Icon */}
                     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isMaster ? 'bg-amber-500/10 text-amber-400' : 'bg-slate-700/50 text-slate-400'}`}>
                       {isMaster ? <Crown size={14} /> : <User size={14} />}
                     </div>
-                    <div className="flex-1 min-w-0">
+
+                    {/* Name + code — clickable */}
+                    <button
+                      onClick={() => onSelect(adv.id)}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <p className="truncate text-sm font-medium text-slate-200 group-hover:text-slate-100">{adv.name}</p>
                       <p className="font-mono text-[11px] text-slate-600">{adv.id}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
+                    </button>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${isMaster ? 'bg-amber-500/10 text-amber-500' : 'bg-slate-700 text-slate-400'}`}>
                         {isMaster ? 'Mestre' : 'Jogador'}
                       </span>
+
                       <button
                         onClick={(e) => { e.stopPropagation(); copyId(adv.id) }}
                         className="rounded-md p-1 text-slate-600 hover:bg-slate-700 hover:text-slate-300"
@@ -146,8 +176,40 @@ export default function AdventureHome({ adventures, playerId, onSelect, onAdvent
                       >
                         {copiedId === adv.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                       </button>
+
+                      {/* Delete / Leave */}
+                      {isConfirming ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-[11px] text-slate-400">
+                            {isMaster ? 'Excluir?' : 'Sair?'}
+                          </span>
+                          <button
+                            onClick={() => handleRemove(adv)}
+                            disabled={isDeleting}
+                            className="rounded-md p-1 text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                            title="Confirmar"
+                          >
+                            <Check size={13} />
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="rounded-md p-1 text-slate-500 hover:bg-slate-700 hover:text-slate-300"
+                            title="Cancelar"
+                          >
+                            <span className="text-xs font-bold">✕</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setConfirmId(adv.id) }}
+                          className="rounded-md p-1 text-slate-600 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400"
+                          title={isMaster ? 'Excluir aventura' : 'Sair da aventura'}
+                        >
+                          {isMaster ? <Trash2 size={13} /> : <LogOut size={13} />}
+                        </button>
+                      )}
                     </div>
-                  </button>
+                  </div>
                 </li>
               )
             })}

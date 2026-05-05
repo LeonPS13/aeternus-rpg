@@ -21,28 +21,29 @@ export default function AdventureDiary() {
   useEffect(() => {
     const id = getPlayerId()
     setPlayerId(id)
-    setAdventures(getAdventures())
+    getAdventures(id).then(setAdventures)
   }, [])
 
   useEffect(() => {
     if (selectedId) {
-      setEntries(getEntries(selectedId))
+      getEntries(selectedId).then(setEntries)
     }
   }, [selectedId])
 
-  function handleSelect(id: string) {
+  async function handleSelect(id: string) {
     setSelectedId(id)
-    setEntries(getEntries(id))
+    const data = await getEntries(id)
+    setEntries(data)
   }
 
-  function handleSaveEntry(entry: DiaryEntry) {
-    saveEntry(entry)
-    if (selectedId) setEntries(getEntries(selectedId))
+  async function handleSaveEntry(entry: DiaryEntry) {
+    await saveEntry(entry)
+    if (selectedId) setEntries(await getEntries(selectedId))
   }
 
-  function handleDeleteEntry(id: string) {
-    deleteEntry(id)
-    if (selectedId) setEntries(getEntries(selectedId))
+  async function handleDeleteEntry(id: string) {
+    await deleteEntry(id)
+    if (selectedId) setEntries(await getEntries(selectedId))
   }
 
   const selectedAdventure = adventures.find((a) => a.id === selectedId) ?? null
