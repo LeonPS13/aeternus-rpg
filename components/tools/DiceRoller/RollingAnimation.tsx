@@ -33,26 +33,29 @@ export default function RollingAnimation({ quantity, dieType }: RollingAnimation
   }, [quantity, sides])
 
   return (
-    <div className="animate-[fade-up_0.25s_ease-out_forwards] rounded-2xl border border-cyan-500/20 bg-slate-800/40 p-6">
-      <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">
-        Rolando {quantity}{dieType}…
-      </p>
+    <div className="arcane-panel animate-[fade-up_0.25s_ease-out_forwards] p-6">
+      <p className="section-label mb-4">· Rolando {quantity}{dieType}… ·</p>
       <div className="flex flex-wrap gap-3">
         {values.map((val, idx) => (
           <div
             key={idx}
-            className="relative flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded-xl border border-cyan-500/40 bg-cyan-500/10 shadow-md shadow-cyan-500/20"
+            className="relative flex h-14 w-14 flex-col items-center justify-center overflow-hidden rounded"
+            style={{
+              border: '1px solid rgba(201,168,76,0.4)',
+              background: 'var(--color-gold-glow)',
+              boxShadow: '0 0 8px rgba(201,168,76,0.1)',
+            }}
           >
-            {/* Sweep line */}
-            <span className="pointer-events-none absolute inset-x-0 top-0 h-px animate-[fade-up_0.4s_ease-out_infinite] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-
+            <span className="pointer-events-none absolute inset-x-0 top-0 h-px animate-[fade-up_0.4s_ease-out_infinite]"
+              style={{ background: 'linear-gradient(90deg, transparent, rgba(201,168,76,0.6), transparent)' }} />
             <span
               key={`${idx}-${tick}`}
-              className="animate-[slot-tick_0.075s_ease-out_forwards] font-mono text-xl font-black tabular-nums text-cyan-300"
+              className="animate-[slot-tick_0.075s_ease-out_forwards] font-mono text-xl font-black tabular-nums"
+              style={{ color: 'var(--color-gold-light)' }}
             >
               {val}
             </span>
-            <span className="text-[9px] font-bold tracking-widest text-cyan-600">
+            <span className="text-[9px] font-bold tracking-widest" style={{ color: 'var(--color-gold-dark)' }}>
               {DIE_LABEL[dieType]}
             </span>
           </div>

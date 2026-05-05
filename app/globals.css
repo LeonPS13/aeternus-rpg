@@ -5,17 +5,39 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-jacquard);
   --font-mono: var(--font-geist-mono);
 
   --animate-fade-up: fade-up 0.4s ease-out forwards;
   --animate-roll-spin: roll-spin 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   --animate-result-pop: result-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-chip-pop: chip-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 :root {
-  --background: #020617;
-  --foreground: #f1f5f9;
+  --background: #0A0806;
+  --foreground: #F0E6CC;
+
+  --color-bg-primary: #0A0806;
+  --color-bg-secondary: #110E09;
+  --color-bg-tertiary: #1A1510;
+  --color-bg-mortar: #0D0B08;
+
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8C96A;
+  --color-gold-dark: #8B6914;
+  --color-gold-glow: rgba(201, 168, 76, 0.15);
+
+  --color-accent: #7B1E1E;
+  --color-accent-hover: #8B1E1E;
+
+  --color-text-primary: #F0E6CC;
+  --color-text-secondary: #A89060;
+  --color-text-muted: #6A5830;
+
+  --color-border-default: rgba(201, 168, 76, 0.2);
+  --color-border-hover: rgba(201, 168, 76, 0.5);
+  --color-border-active: #C9A84C;
 }
 
 * {
@@ -28,39 +50,114 @@ body {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-jacquard), system-ui, sans-serif;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
 
+/* ── Arcane panel (card with corner ornaments) ─────────────── */
+.arcane-panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 4px;
+  position: relative;
+}
+.arcane-panel::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 16px; height: 16px;
+  border-top: 1px solid var(--color-gold);
+  border-left: 1px solid var(--color-gold);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+.arcane-panel::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 16px; height: 16px;
+  border-bottom: 1px solid var(--color-gold);
+  border-right: 1px solid var(--color-gold);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Primary button (octagon clip-path) ────────────────────── */
+.arcane-btn {
+  background: linear-gradient(135deg, #6B1A1A, #8B1E1E);
+  border: 1px solid rgba(201, 168, 76, 0.4);
+  color: var(--color-gold-light);
+  clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+  transition: all 0.2s;
+}
+.arcane-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #5a1616, #7B1E1E);
+  box-shadow: 0 0 30px rgba(192, 48, 48, 0.3);
+}
+.arcane-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Ornament divider ───────────────────────────────────────── */
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+}
+.ornament-line {
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(90deg, rgba(201,168,76,0.6), transparent);
+}
+.ornament-line:last-child {
+  background: linear-gradient(270deg, rgba(201,168,76,0.6), transparent);
+}
+.ornament-diamond {
+  width: 6px;
+  height: 6px;
+  background: var(--color-gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+/* ── Section label ──────────────────────────────────────────── */
+.section-label {
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: var(--color-gold-dark);
+  text-transform: uppercase;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-gold-dark);
+  border-radius: 2px;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────── */
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes roll-spin {
-  0% { transform: rotate(0deg) scale(1); }
-  30% { transform: rotate(180deg) scale(1.2); }
-  60% { transform: rotate(300deg) scale(0.9); }
+  0%   { transform: rotate(0deg) scale(1); }
+  30%  { transform: rotate(180deg) scale(1.2); }
+  60%  { transform: rotate(300deg) scale(0.9); }
   100% { transform: rotate(360deg) scale(1); }
 }
 
 @keyframes result-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.85) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.85) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes slot-tick {
@@ -69,13 +166,8 @@ body {
   100% { opacity: 1;   transform: translateY(0)    scale(1); }
 }
 
-.scrollbar-thin::-webkit-scrollbar {
-  width: 4px;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 2px;
+@keyframes chip-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  70%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }

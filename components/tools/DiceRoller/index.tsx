@@ -23,7 +23,6 @@ export default function DiceRoller() {
   const handleRoll = useCallback(() => {
     if (isRolling) return
     setIsRolling(true)
-
     setTimeout(() => {
       const result = rollDice({ dieType: selectedDie, quantity, modifier })
       setLastResult(result)
@@ -33,9 +32,7 @@ export default function DiceRoller() {
   }, [isRolling, selectedDie, quantity, modifier])
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') handleRoll()
-    },
+    (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') handleRoll() },
     [handleRoll],
   )
 
@@ -46,25 +43,21 @@ export default function DiceRoller() {
       {/* Header */}
       <div className="mb-8">
         <div className="mb-1 flex items-center gap-2">
-          <span className="rounded-md bg-cyan-500/10 p-1">
-            <Sparkles size={14} className="text-cyan-400" />
+          <span className="rounded p-1" style={{ background: 'var(--color-gold-glow)' }}>
+            <Sparkles size={14} style={{ color: 'var(--color-gold)' }} />
           </span>
-          <h1 className="text-2xl font-bold text-slate-100">Rolador de Dados</h1>
+          <h1 className="text-3xl" style={{ color: 'var(--color-text-primary)' }}>Rolador de Dados</h1>
         </div>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
           Selecione o dado, defina a quantidade e modificador, então role.
         </p>
       </div>
 
       {/* Main Card */}
-      <div className="mb-6 space-y-6 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 shadow-xl shadow-black/20 backdrop-blur-sm">
-        <DiceSelector
-          selectedDie={selectedDie}
-          isRolling={isRolling}
-          onSelect={setSelectedDie}
-        />
+      <div className="arcane-panel mb-6 space-y-6 p-6">
+        <DiceSelector selectedDie={selectedDie} isRolling={isRolling} onSelect={setSelectedDie} />
 
-        <div className="h-px bg-slate-800" />
+        <div className="ornament-divider" />
 
         <RollControls
           quantity={quantity}
@@ -78,22 +71,15 @@ export default function DiceRoller() {
           onClick={handleRoll}
           onKeyDown={handleKeyDown}
           disabled={isRolling}
-          className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-amber-600 to-orange-700 py-4 font-bold text-white shadow-lg shadow-amber-600/25 transition-all duration-200 hover:from-amber-500 hover:to-orange-600 hover:shadow-amber-500/30 hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+          className="arcane-btn w-full py-4 font-bold"
         >
-          <span className="relative z-10 flex items-center justify-center gap-2 text-base">
+          <span className="flex items-center justify-center gap-2 text-base">
             {isRolling ? (
-              <>
-                <span className="animate-spin text-lg">⚄</span>
-                Rolando…
-              </>
+              <><span className="animate-spin text-lg">⚄</span> Rolando…</>
             ) : (
-              <>
-                <span className="text-lg">⚄</span>
-                Rolar {notation}
-              </>
+              <><span className="text-lg">⚄</span> Rolar {notation}</>
             )}
           </span>
-          <span className="absolute inset-0 -translate-x-full bg-white/10 transition-transform duration-500 group-hover:translate-x-full" />
         </button>
       </div>
 
