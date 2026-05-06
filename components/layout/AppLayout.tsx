@@ -39,7 +39,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <div className="pointer-events-none absolute inset-0"
           style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 60%)' }} />
-        <div className="relative z-10 flex flex-1 flex-col">{children}</div>
+        <div className="relative flex flex-1 flex-col">{children}</div>
       </main>
     </div>
   )
