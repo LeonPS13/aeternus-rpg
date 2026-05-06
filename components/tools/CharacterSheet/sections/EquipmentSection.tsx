@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, BookOpen } from 'lucide-react'
 import type { Character, InventoryItem } from '@/types/character'
+import ItemPickerModal from '@/components/tools/CharacterSheet/ItemPickerModal'
 
 interface Props {
   char: Character
@@ -59,6 +60,8 @@ function updateItem(items: InventoryItem[], id: string, updates: Partial<Invento
 }
 
 export default function EquipmentSection({ char, onChange }: Props) {
+  const [showItemPicker, setShowItemPicker] = useState(false)
+
   function addItem() {
     onChange({
       inventory: [
@@ -96,15 +99,32 @@ export default function EquipmentSection({ char, onChange }: Props) {
       </div>
 
       {/* Inventory */}
+      {showItemPicker && (
+        <ItemPickerModal
+          onConfirm={(item) => {
+            onChange({ inventory: [...char.inventory, item] })
+            setShowItemPicker(false)
+          }}
+          onClose={() => setShowItemPicker(false)}
+        />
+      )}
       <div className="arcane-panel p-4">
         <div className="mb-4 flex items-center justify-between">
           <p className="section-label">· Inventário ·</p>
-          <button
-            onClick={addItem}
-            className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
-            style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
-            <Plus size={12} /> Adicionar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowItemPicker(true)}
+              className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+              style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)' }}>
+              <BookOpen size={11} /> Codex
+            </button>
+            <button
+              onClick={addItem}
+              className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+              style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
+              <Plus size={12} /> Personalizado
+            </button>
+          </div>
         </div>
 
         {char.inventory.length === 0 ? (

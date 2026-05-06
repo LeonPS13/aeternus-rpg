@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Plus, Trash2, CheckCircle2, Circle } from 'lucide-react'
-import type { Character, CharacterAttack, ArmorType } from '@/types/character'
-import { ARMOR_TYPES } from '@/types/character'
+import { Plus, Trash2, CheckCircle2, Circle, BookOpen } from 'lucide-react'
+import type { Character, CharacterAttack, InventoryItem } from '@/types/character'
 import {
   calcAC, calcInitiative, calcPassivePerception, fmtMod, HIT_DICE_BY_CLASS,
 } from '@/lib/character-calc'
+import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
+import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
 
 interface Props {
   char: Character
@@ -80,11 +81,13 @@ function updateAttack(attacks: CharacterAttack[], id: string, updates: Partial<C
   return attacks.map((a) => a.id === id ? { ...a, ...updates } : a)
 }
 
+function baseWeaponName(name: string): string {
+  return name.replace(/ \(1 mão\)$/, '').replace(/ \(2 mãos\)$/, '')
+}
+
 export default function CombatSection({ char, onChange }: Props) {
   const hitDice = HIT_DICE_BY_CLASS[char.characterClass] ?? 'd8'
-  const acLabel = char.acArmorType !== 'none'
-    ? { light: 'leve', medium: 'média', heavy: 'pesada' }[char.acArmorType] ?? ''
-    : ''
+  const [showWeaponPicker, setShowWeaponPicker] = useState(false)
 
   function addAttack() {
     onChange({
@@ -96,7 +99,17 @@ export default function CombatSection({ char, onChange }: Props) {
   }
 
   function removeAttack(id: string) {
-    onChange({ attacks: char.attacks.filter((a) => a.id !== id) })
+    const atk = char.attacks.find(a => a.id === id)
+    const remaining = char.attacks.filter(a => a.id !== id)
+    const updates: Partial<Character> = { attacks: remaining }
+    if (atk) {
+      const base = baseWeaponName(atk.name)
+      const stillLinked = remaining.some(a => baseWeaponName(a.name) === base)
+      if (!stillLinked) {
+        updates.inventory = char.inventory.filter(i => i.name !== base && i.name !== atk.name)
+      }
+    }
+    onChange(updates)
   }
 
   return (
@@ -111,35 +124,21 @@ export default function CombatSection({ char, onChange }: Props) {
           <StatBox label="Percepção Passiva" value={calcPassivePerception(char)} />
         </div>
 
-        {/* AC config */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-4">
-          <div>
-            <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>Tipo de Armadura</label>
-            <select
-              value={char.acArmorType}
-              onChange={(e) => onChange({ acArmorType: e.target.value as ArmorType })}
-              className="w-full px-2 py-1.5 text-sm"
-              style={inputStyle}
-            >
-              <option value="none">Sem armadura</option>
-              <option value="light">Leve</option>
-              <option value="medium">Média</option>
-              <option value="heavy">Pesada</option>
-            </select>
-          </div>
-          {char.acArmorType !== 'none' && (
-            <div>
-              <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                CA da armadura {acLabel}
-              </label>
-              <NumInput value={char.acArmorEquipped} onChange={(n) => onChange({ acArmorEquipped: n })} />
-            </div>
-          )}
-          <div>
-            <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>Bônus de Escudo</label>
-            <NumInput value={char.acShieldBonus} onChange={(n) => onChange({ acShieldBonus: n })} />
-          </div>
-          <div>
+        {/* AC config — Armor Selector */}
+        <div className="mt-4">
+          <ArmorSelector
+            char={char}
+            onChange={onChange}
+            onItemAdd={(item: InventoryItem) => {
+              if (!char.inventory.some(i => i.name === item.name)) {
+                onChange({ inventory: [...char.inventory, item] })
+              }
+            }}
+            onItemRemove={(name) => {
+              onChange({ inventory: char.inventory.filter(i => i.name !== name) })
+            }}
+          />
+          <div className="mt-3 w-36">
             <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>Bônus Extra CA</label>
             <NumInput value={char.acExtraBonus} onChange={(n) => onChange({ acExtraBonus: n })} />
           </div>
@@ -235,15 +234,39 @@ export default function CombatSection({ char, onChange }: Props) {
       </div>
 
       {/* Attacks */}
+      {showWeaponPicker && (
+        <WeaponPickerModal
+          char={char}
+          onConfirm={(attacks, item) => {
+            onChange({
+              attacks:   [...char.attacks, ...attacks],
+              inventory: char.inventory.some(i => i.name === item.name)
+                ? char.inventory
+                : [...char.inventory, item],
+            })
+            setShowWeaponPicker(false)
+          }}
+          onClose={() => setShowWeaponPicker(false)}
+        />
+      )}
+
       <div className="arcane-panel p-4">
         <div className="mb-4 flex items-center justify-between">
           <p className="section-label">· Ataques e Magias ·</p>
-          <button
-            onClick={addAttack}
-            className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
-            style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
-            <Plus size={12} /> Adicionar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowWeaponPicker(true)}
+              className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+              style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)' }}>
+              <BookOpen size={11} /> Codex
+            </button>
+            <button
+              onClick={addAttack}
+              className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+              style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
+              <Plus size={12} /> Personalizado
+            </button>
+          </div>
         </div>
 
         {char.attacks.length === 0 ? (

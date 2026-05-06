@@ -26,6 +26,50 @@ export async function getCodexEntries(): Promise<CodexEntry[]> {
   return data.map(fromRow)
 }
 
+export async function getWeaponEntries(): Promise<CodexEntry[]> {
+  const { data, error } = await supabase
+    .from('codex')
+    .select('*')
+    .eq('type', 'weapon')
+    .order('subtype')
+    .order('name')
+  if (error || !data) return []
+  return data.map(fromRow)
+}
+
+export async function getArmorEntries(): Promise<CodexEntry[]> {
+  const { data, error } = await supabase
+    .from('codex')
+    .select('*')
+    .eq('type', 'armor')
+    .order('subtype')
+    .order('name')
+  if (error || !data) return []
+  return data.map(fromRow)
+}
+
+export async function getItemEntries(): Promise<CodexEntry[]> {
+  const { data, error } = await supabase
+    .from('codex')
+    .select('*')
+    .eq('type', 'item')
+    .order('subtype')
+    .order('name')
+  if (error || !data) return []
+  return data.map(fromRow)
+}
+
+export async function getRuleEntries(): Promise<CodexEntry[]> {
+  const { data, error } = await supabase
+    .from('codex')
+    .select('*')
+    .eq('type', 'rule')
+    .order('subtype')
+    .order('name')
+  if (error || !data) return []
+  return data.map(fromRow)
+}
+
 export function translateSubtype(subtype: string | null): string {
   if (!subtype) return ''
   const map: Record<string, string> = {

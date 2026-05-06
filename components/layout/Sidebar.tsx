@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Dice6, User, Map, Table2, BookOpen, X, Library } from 'lucide-react'
+import { Dice6, User, Map, Table2, BookOpen, X, Library, Shield } from 'lucide-react'
 
 interface ToolItem {
   label: string
@@ -15,6 +15,7 @@ const tools: ToolItem[] = [
   { label: 'Rolador de Dados',      href: '/tools/dice-roller',         icon: <Dice6 size={16} />,    active: true  },
   { label: 'Diário de Aventura',    href: '/tools/adventure-diary',     icon: <BookOpen size={16} />, active: true  },
   { label: 'Ficha de Personagem',   href: '/tools/character-sheet',     icon: <User size={16} />,     active: true  },
+  { label: 'Escudo do Mestre',      href: '/tools/master-shield',       icon: <Shield size={16} />,   active: true  },
   { label: 'Codex',                 href: '/tools/codex',               icon: <Library size={16} />,  active: true  },
   { label: 'Tabelas de Encontro',   href: '/tools/encounter-tables',    icon: <Table2 size={16} />,   active: false },
   { label: 'Mapa de Masmorra',      href: '/tools/dungeon-map',         icon: <Map size={16} />,      active: false },
@@ -31,7 +32,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <aside
       className={[
-        'fixed inset-y-0 left-0 z-40 flex h-full w-60 flex-col',
+        'fixed inset-y-0 left-0 z-40 flex h-full w-52 flex-col',
         'transition-transform duration-200 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full',
         'md:relative md:translate-x-0',
@@ -63,7 +64,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Tools Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto scrollbar-thin px-3 py-4">
         <p className="section-label mb-3 px-2">· Ferramentas ·</p>
         <ul className="space-y-0.5">
           {tools.map((tool) => {

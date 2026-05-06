@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import type { Character } from '@/types/character'
 import { CLASSES, RACES, ALIGNMENTS } from '@/types/character'
 import { profBonus } from '@/lib/character-calc'
@@ -31,6 +32,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function IdentitySection({ char, onChange }: Props) {
   const pb = profBonus(char.level)
+  const [levelText, setLevelText] = useState(String(char.level))
+  const levelFocused = useRef(false)
+  useEffect(() => { if (!levelFocused.current) setLevelText(String(char.level)) }, [char.level])
 
   return (
     <div className="space-y-6">
@@ -88,8 +92,15 @@ export default function IdentitySection({ char, onChange }: Props) {
           <Field label="Nível">
             <input
               type="number" min={1} max={20}
-              value={char.level}
-              onChange={(e) => onChange({ level: Math.min(20, Math.max(1, Number(e.target.value) || 1)) })}
+              value={levelText}
+              onChange={(e) => setLevelText(e.target.value)}
+              onFocus={() => { levelFocused.current = true }}
+              onBlur={() => {
+                levelFocused.current = false
+                const n = Math.min(20, Math.max(1, Number(levelText) || 1))
+                onChange({ level: n })
+                setLevelText(String(n))
+              }}
               className="w-full px-3 py-2 text-base [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               style={inputStyle}
             />

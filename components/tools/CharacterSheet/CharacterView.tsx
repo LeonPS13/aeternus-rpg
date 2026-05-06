@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, Edit2, Trash2, Plus } from 'lucide-react'
+import { ArrowLeft, Edit2, Trash2, Plus, BookOpen, Star } from 'lucide-react'
 import type { Character, CharacterAttack, InventoryItem } from '@/types/character'
 import { SKILL_NAMES } from '@/types/character'
 import {
@@ -9,6 +9,9 @@ import {
   mod, profBonus, fmtMod, calcAC, calcInitiative, calcPassivePerception,
   calcSkillValue, calcSaveValue, HIT_DICE_BY_CLASS,
 } from '@/lib/character-calc'
+import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
+import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
+import ItemPickerModal from '@/components/tools/CharacterSheet/ItemPickerModal'
 
 interface Props {
   char: Character
@@ -110,9 +113,17 @@ function updateAttack(attacks: CharacterAttack[], id: string, updates: Partial<C
 }
 
 export default function CharacterView({ char, onChange, onBack, onEdit, onDelete }: Props) {
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmDelete, setConfirmDelete]       = useState(false)
+  const [showWeaponPicker, setShowWeaponPicker] = useState(false)
+  const [showItemPicker, setShowItemPicker]     = useState(false)
   const pb = profBonus(char.level)
   const hitDice = HIT_DICE_BY_CLASS[char.characterClass] ?? 'd8'
+
+  function pushItem(item: InventoryItem) {
+    if (!char.inventory.some(i => i.name === item.name)) {
+      onChange({ inventory: [...char.inventory, item] })
+    }
+  }
 
   function addItem() {
     onChange({
@@ -137,7 +148,19 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
   }
 
   function removeAttack(id: string) {
-    onChange({ attacks: char.attacks.filter((a) => a.id !== id) })
+    const atk = char.attacks.find(a => a.id === id)
+    const remaining = char.attacks.filter(a => a.id !== id)
+    const updates: Partial<Character> = { attacks: remaining }
+    if (atk) {
+      const base = atk.name.replace(/ \(1 mão\)$/, '').replace(/ \(2 mãos\)$/, '')
+      const stillLinked = remaining.some(a =>
+        a.name.replace(/ \(1 mão\)$/, '').replace(/ \(2 mãos\)$/, '') === base
+      )
+      if (!stillLinked) {
+        updates.inventory = char.inventory.filter(i => i.name !== base && i.name !== atk.name)
+      }
+    }
+    onChange(updates)
   }
 
   const inputBase = {
@@ -215,7 +238,7 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
       </div>
 
       {/* Two-column body */}
-      <div className="grid gap-4 md:grid-cols-[240px_1fr]">
+      <div className="grid gap-4 md:grid-cols-[280px_1fr]">
         {/* Left: attributes, saves, skills */}
         <div className="space-y-4">
           <div className="arcane-panel p-4">
@@ -260,11 +283,12 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
                         background: s.expert ? 'var(--color-gold-light)' : s.proficient ? 'var(--color-gold)' : 'var(--color-bg-tertiary)',
                         border: '1px solid var(--color-border-default)',
                       }} />
-                    <span className="flex-1 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                    <span className="flex flex-1 items-center gap-1 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                       {SKILL_LABELS[skill]}
-                      <span className="ml-1 text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                      <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
                         ({SKILL_ATTR_ABBR[skill].toLowerCase()})
                       </span>
+                      {s.expert && <Star size={10} fill="currentColor" style={{ color: 'var(--color-gold-light)', flexShrink: 0 }} />}
                     </span>
                     <span className="text-base font-medium" style={{ color: 'var(--color-gold-light)' }}>{fmtMod(value)}</span>
                   </div>
@@ -279,7 +303,7 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
           {/* Pontos de Vida */}
           <div className="arcane-panel p-4">
             <p className="section-label mb-3">· Pontos de Vida ·</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {/* PV Atuais — editável com + / - */}
               <div className="flex flex-col items-center gap-2 rounded py-3 px-2"
                 style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-gold)', boxShadow: '0 0 8px rgba(201,168,76,0.12)' }}>
@@ -304,16 +328,25 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
               </div>
 
               {/* PV Temporários */}
-              <div className="flex flex-col items-center justify-center gap-1 rounded py-3 px-2"
+              <div className="col-span-2 flex flex-col items-center gap-2 rounded py-3 px-2 sm:col-span-1"
                 style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-default)' }}>
-                <span className="text-2xl leading-none" style={{ color: 'var(--color-text-secondary)' }}>{char.tempHp}</span>
+                <div className="flex w-full items-center gap-1">
+                  <StepBtn onClick={() => onChange({ tempHp: Math.max(0, char.tempHp - 1) })}>−</StepBtn>
+                  <NumInput
+                    value={char.tempHp}
+                    onChange={(n) => onChange({ tempHp: n })}
+                    className="min-w-0 flex-1 text-center text-2xl leading-none"
+                    style={{ ...inputBase, color: 'var(--color-text-secondary)' }}
+                  />
+                  <StepBtn onClick={() => onChange({ tempHp: char.tempHp + 1 })}>+</StepBtn>
+                </div>
                 <span className="text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>PV Temp.</span>
               </div>
             </div>
 
             {/* Dados de Vida */}
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="flex flex-col items-center gap-1 rounded py-2 px-3"
+              <div className="flex flex-col items-center justify-center gap-1 rounded py-2 px-3"
                 style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-default)' }}>
                 <span className="text-xl leading-none" style={{ color: 'var(--color-gold-light)' }}>
                   {hitDice} × {char.level}
@@ -344,16 +377,68 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
             )}
           </div>
 
+          {/* Armadura e Escudo */}
+          <div className="arcane-panel p-4">
+            <p className="section-label mb-4">· Armadura e Escudo ·</p>
+            <ArmorSelector
+              char={char}
+              onChange={onChange}
+              onItemAdd={pushItem}
+              onItemRemove={(name) => {
+                onChange({ inventory: char.inventory.filter(i => i.name !== name) })
+              }}
+            />
+            <div className="mt-3 w-36">
+              <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>Bônus Extra CA</label>
+              <input
+                type="number"
+                value={char.acExtraBonus}
+                onChange={e => onChange({ acExtraBonus: Number(e.target.value) || 0 })}
+                className="w-full px-3 py-1.5 text-base [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-border-default)',
+                  color: 'var(--color-text-primary)',
+                  borderRadius: '4px',
+                  outline: 'none',
+                }}
+              />
+            </div>
+          </div>
+
           {/* Ataques */}
+          {showWeaponPicker && (
+            <WeaponPickerModal
+              char={char}
+              onConfirm={(attacks, item) => {
+                onChange({
+                  attacks:   [...char.attacks, ...attacks],
+                  inventory: char.inventory.some(i => i.name === item.name)
+                    ? char.inventory
+                    : [...char.inventory, item],
+                })
+                setShowWeaponPicker(false)
+              }}
+              onClose={() => setShowWeaponPicker(false)}
+            />
+          )}
           <div className="arcane-panel p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="section-label">· Ataques e Magias ·</p>
-              <button
-                onClick={addAttack}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs"
-                style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
-                <Plus size={11} /> Adicionar
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowWeaponPicker(true)}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs"
+                  style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)' }}>
+                  <BookOpen size={11} /> Codex
+                </button>
+                <button
+                  onClick={addAttack}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs"
+                  style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
+                  <Plus size={11} /> Personalizado
+                </button>
+              </div>
             </div>
             {char.attacks.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Nenhum ataque adicionado.</p>
@@ -410,6 +495,15 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
           </div>
 
           {/* Equipamento — sempre visível, moedas editáveis, itens gerenciáveis */}
+          {showItemPicker && (
+            <ItemPickerModal
+              onConfirm={(item) => {
+                onChange({ inventory: [...char.inventory, item] })
+                setShowItemPicker(false)
+              }}
+              onClose={() => setShowItemPicker(false)}
+            />
+          )}
           <div className="arcane-panel p-4">
             <p className="section-label mb-3">· Equipamento ·</p>
 
@@ -432,15 +526,30 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
 
             {/* Inventário */}
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                {char.inventory.length > 0 ? `${char.inventory.length} item${char.inventory.length !== 1 ? 's' : ''}` : 'Inventário vazio'}
+              <span className="text-base" style={{ color: 'var(--color-text-secondary)' }}>
+                {char.inventory.length > 0
+                  ? (() => {
+                      const count = char.inventory.length
+                      const totalWeight = char.inventory.reduce((s, i) => s + i.weight * i.quantity, 0)
+                      const weightStr = totalWeight % 1 === 0 ? String(totalWeight) : totalWeight.toFixed(1)
+                      return `${count} item${count !== 1 ? 's' : ''} · ${weightStr} lb`
+                    })()
+                  : 'Inventário vazio'}
               </span>
-              <button
-                onClick={addItem}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
-                style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
-                <Plus size={11} /> Adicionar
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowItemPicker(true)}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+                  style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-gold-dark)' }}>
+                  <BookOpen size={11} /> Codex
+                </button>
+                <button
+                  onClick={addItem}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
+                  style={{ border: '1px solid var(--color-border-default)', color: 'var(--color-text-muted)' }}>
+                  <Plus size={11} /> Personalizado
+                </button>
+              </div>
             </div>
 
             {char.inventory.length > 0 && (

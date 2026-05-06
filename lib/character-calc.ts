@@ -33,7 +33,7 @@ export const SKILL_LABELS: Record<SkillName, string> = {
   acrobatics: 'Acrobacia',    arcana: 'Arcanismo',       athletics: 'Atletismo',
   performance: 'Atuação',    deception: 'Enganação',    stealth: 'Furtividade',
   history: 'História',       intimidation: 'Intimidação', insight: 'Intuição',
-  investigation: 'Investigação', animalHandling: 'Lidar com Animais', medicine: 'Medicina',
+  investigation: 'Investigação', animalHandling: 'Adestrar Animais', medicine: 'Medicina',
   nature: 'Natureza',        perception: 'Percepção',   persuasion: 'Persuasão',
   sleightOfHand: 'Prestidigitação', religion: 'Religião', survival: 'Sobrevivência',
 }

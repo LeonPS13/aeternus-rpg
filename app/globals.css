@@ -45,12 +45,12 @@
 }
 
 html {
-  font-size: 18px;
+  font-size: 22px;
   height: 100%;
 }
 
 @media (max-width: 767px) {
-  html { font-size: 16px; }
+  html { font-size: 18px; }
 }
 
 body {
@@ -136,7 +136,7 @@ body {
 
 /* ── Section label ──────────────────────────────────────────── */
 .section-label {
-  font-size: 18px;
+  font-size: 1rem;
   letter-spacing: 2px;
   color: var(--color-gold-dark);
 }

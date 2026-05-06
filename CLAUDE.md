@@ -46,6 +46,7 @@ app/
     dice-roller/page.tsx
     adventure-diary/page.tsx
     character-sheet/page.tsx
+    master-shield/page.tsx
     codex/page.tsx
 
 components/
@@ -74,6 +75,10 @@ components/
       index.tsx                Orquestrador — filtro por tipo, busca, agrupamento por subtipo
       CodexCard.tsx            Card de item/arma/armadura/regra com ícone por categoria
       CodexDetail.tsx          Modal de detalhe com dados estruturados por tipo
+    MasterShield/              Escudo do Mestre (localStorage)
+      index.tsx                Orquestrador — 12 cards (notas ou regras do Codex)
+      ShieldGrid.tsx           Grid 2×6 mobile / 4×3 desktop; NoteCard + RuleCard sempre expandidos
+      RulePickerModal.tsx      Modal com abas Codex (busca+preview) e Personalizado (título+conteúdo)
 
 lib/
   supabase.ts                  Client Supabase singleton (createClient)
@@ -81,13 +86,15 @@ lib/
   adventure.ts                 CRUD Supabase para Adventure/DiaryEntry
   character.ts                 CRUD Supabase para Character (getCharacters, saveCharacter, deleteCharacter, createEmptyCharacter)
   character-calc.ts            Cálculos D&D 5e SRD: mod(), profBonus(), calcAC(), calcInitiative(), calcSkillValue(), etc.
-  codex.ts                     getCodexEntries (async), translateSubtype, translateDamageType, translateProperty
+  codex.ts                     getCodexEntries, getRuleEntries (async), translateSubtype, translateDamageType, translateProperty
+  master-shield.ts             loadShield(), saveShield() — localStorage com chave aeternus_shield_{playerId}
 
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
   adventure.ts                 Adventure, DiaryEntry, ActiveTab
   character.ts                 Character, CharacterAttack, InventoryItem, Skills, CLASSES, RACES, ALIGNMENTS
   codex.ts                     CodexType, CodexEntry
+  master-shield.ts             ShieldCard (union: note|rule|null), ShieldData
 
 supabase/
   codex_seed.sql               DDL + seed de armas, armaduras e itens SRD (~127 entradas)
@@ -165,7 +172,7 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 - `.ornament-divider` — divisor com linhas e diamante dourado
 - `.section-label` — label de seção em 18px, letra dourada
 
-**Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 18px }` escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
+**Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 22px }` desktop / `18px` mobile (`@media (max-width: 767px)`) — escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
 
 **Logo sidebar:** "Æternus" / "RPG" em texto, `text-4xl tracking-widest`, sem imagem.
 
@@ -178,6 +185,7 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 | Rolador de Dados | `/tools/dice-roller` | `components/tools/DiceRoller/index.tsx` |
 | Diário de Aventura | `/tools/adventure-diary` | `components/tools/AdventureDiary/index.tsx` |
 | Ficha de Personagem | `/tools/character-sheet` | `components/tools/CharacterSheet/index.tsx` |
+| Escudo do Mestre | `/tools/master-shield` | `components/tools/MasterShield/index.tsx` |
 | Codex | `/tools/codex` | `components/tools/Codex/index.tsx` |
 
 ---
@@ -212,6 +220,7 @@ Ferramenta de consulta somente leitura. Carrega todos os itens do Supabase de um
 | Função | Descrição |
 |---|---|
 | `getCodexEntries()` | async — busca tudo ordenado por type, name |
+| `getRuleEntries()` | async — busca só type='rule', ordenado por subtype, name (usado pelo Escudo do Mestre) |
 | `translateSubtype(sub)` | sync — inglês → português para badges e grupos |
 | `translateDamageType(dmg)` | sync — 'piercing' → 'perfurante', etc. |
 | `translateProperty(prop)` | sync — 'two-handed' → 'duas mãos', etc. |
@@ -265,6 +274,40 @@ Campos relevantes: `id`, `player_id`, `character_name`, `class`, `level`, `race`
 | `create` | `WizardView` | 5 etapas sequenciais; save só na última |
 | `view` | `CharacterView` | Leitura com edição inline (HP, moedas, inventário, ataques) |
 | `edit` | `SheetView` | Abas livres, botão Salvar sempre visível |
+
+---
+
+## Escudo do Mestre — DM Screen interativo
+
+Ferramenta client-only (sem Supabase). Persiste em `localStorage` com chave `aeternus_shield_{playerId}`.
+
+**Modelo de dados (`types/master-shield.ts`):**
+```typescript
+type ShieldCard =
+  | { type: 'note'; title: string; content: string }
+  | { type: 'rule'; codexId: string }
+  | null   // slot vazio
+
+interface ShieldData { cards: ShieldCard[] }  // length 12
+```
+
+**Layout:** grid `grid-cols-2 sm:grid-cols-4` — 6×2 mobile, 3×4 desktop.
+
+**Tipos de card:**
+- **Slot vazio:** borda tracejada com botão "+ Criar" centralizado
+- **NoteCard:** input de título (gold-light, `text-xl`) + textarea de conteúdo (`text-lg`, `rows={6}`); sempre expandido, sem colapso
+- **RuleCard:** nome em `text-xl`, badge de subtipo, descrição + efeitos/níveis/graus sempre visíveis; borda dourada fixa
+
+**Modal de criação (`RulePickerModal.tsx`):**
+- Aba **Codex**: busca por nome/subtipo, lista agrupada por `RULE_SUBTYPE_ORDER`, preview da regra selecionada
+- Aba **Personalizado**: input de título + textarea de conteúdo
+
+**Funções em `lib/master-shield.ts`:**
+
+| Função | Descrição |
+|---|---|
+| `loadShield()` | sync — lê localStorage, fallback para 12 slots nulos |
+| `saveShield(data)` | sync — serializa para localStorage |
 
 ---
 
