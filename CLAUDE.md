@@ -46,6 +46,7 @@ app/
     dice-roller/page.tsx
     adventure-diary/page.tsx
     character-sheet/page.tsx
+    codex/page.tsx
 
 components/
   layout/
@@ -69,6 +70,10 @@ components/
         CombatSection.tsx
         EquipmentSection.tsx
         TraitsSection.tsx
+    Codex/                     Biblioteca SRD navegável (Supabase, somente leitura)
+      index.tsx                Orquestrador — filtro por tipo, busca, agrupamento por subtipo
+      CodexCard.tsx            Card de item/arma/armadura/regra com ícone por categoria
+      CodexDetail.tsx          Modal de detalhe com dados estruturados por tipo
 
 lib/
   supabase.ts                  Client Supabase singleton (createClient)
@@ -76,11 +81,17 @@ lib/
   adventure.ts                 CRUD Supabase para Adventure/DiaryEntry
   character.ts                 CRUD Supabase para Character (getCharacters, saveCharacter, deleteCharacter, createEmptyCharacter)
   character-calc.ts            Cálculos D&D 5e SRD: mod(), profBonus(), calcAC(), calcInitiative(), calcSkillValue(), etc.
+  codex.ts                     getCodexEntries (async), translateSubtype, translateDamageType, translateProperty
 
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
   adventure.ts                 Adventure, DiaryEntry, ActiveTab
   character.ts                 Character, CharacterAttack, InventoryItem, Skills, CLASSES, RACES, ALIGNMENTS
+  codex.ts                     CodexType, CodexEntry
+
+supabase/
+  codex_seed.sql               DDL + seed de armas, armaduras e itens SRD (~127 entradas)
+  codex_rules_seed.sql         Seed de regras SRD: 15 condições, 13 ações de combate, 9 regras gerais
 
 .env.local                     NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY (não commitado)
 ```
@@ -98,6 +109,7 @@ types/
 | `adventures` | id (text PK, 6 chars), name, master_id, created_at, icon (text, default 'BookOpen') |
 | `adventure_memberships` | adventure_id + player_id (PK composta) — controla quem tem acesso |
 | `diary_entries` | id (uuid), adventure_id, date, title, summary, tags[], author_id, diary_type, created_at, updated_at |
+| `codex` | id (uuid), name, type ('weapon'\|'armor'\|'item'\|'rule'\|'spell'\|'feature'), subtype, description, data (JSONB), source ('srd'\|'custom'), player_id (null = sistema), created_at, updated_at |
 
 **Migração pendente** (rodar no SQL Editor do Supabase se coluna `icon` ainda não existir):
 ```sql
@@ -166,6 +178,47 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 | Rolador de Dados | `/tools/dice-roller` | `components/tools/DiceRoller/index.tsx` |
 | Diário de Aventura | `/tools/adventure-diary` | `components/tools/AdventureDiary/index.tsx` |
 | Ficha de Personagem | `/tools/character-sheet` | `components/tools/CharacterSheet/index.tsx` |
+| Codex | `/tools/codex` | `components/tools/Codex/index.tsx` |
+
+---
+
+## Codex — Biblioteca SRD
+
+Ferramenta de consulta somente leitura. Carrega todos os itens do Supabase de uma vez e filtra no cliente.
+
+**Tipos (`CodexType`):** `weapon`, `armor`, `item`, `rule`, `spell`, `feature`
+
+**Subtypes por tipo:**
+
+| Tipo | Subtypes |
+|---|---|
+| `weapon` | `simple melee`, `simple ranged`, `martial melee`, `martial ranged` |
+| `armor` | `light`, `medium`, `heavy`, `shield` |
+| `item` | `ammunition`, `light source`, `consumable`, `potion`, `scroll`, `focus`, `kit`, `container`, `gear` |
+| `rule` | `condition`, `action`, `cover`, `concentration`, `rest`, `death`, `combat`, `reaction` |
+
+**Estrutura do campo `data` (JSONB) por tipo:**
+
+- `weapon`: `{ damage, damage_type, properties[], range?, versatile_damage?, weight, cost }`
+- `armor`: `{ ac_base, max_dex_bonus, min_strength, stealth_disadvantage, weight, cost }` / shield: `{ ac_bonus, stealth_disadvantage, weight, cost }`
+- `item`: campos variáveis por subtipo (healing, damage, uses, capacity, etc.)
+- `rule/condition`: `{ effects: string[], original_name }` / exaustão: `{ levels: [{level, effect}], original_name }`
+- `rule/action`: `{ effects: string[], action_type, original_name }`
+- `rule/cover`: `{ degrees: [{name, bonus, examples}], original_name }`
+- `rule/rest`: `{ duration, effects: string[], original_name }`
+
+**Funções em `lib/codex.ts`:**
+
+| Função | Descrição |
+|---|---|
+| `getCodexEntries()` | async — busca tudo ordenado por type, name |
+| `translateSubtype(sub)` | sync — inglês → português para badges e grupos |
+| `translateDamageType(dmg)` | sync — 'piercing' → 'perfurante', etc. |
+| `translateProperty(prop)` | sync — 'two-handed' → 'duas mãos', etc. |
+
+**Seeds SQL (rodar no SQL Editor do Supabase):**
+1. `supabase/codex_seed.sql` — cria tabela + seeds armas/armaduras/itens
+2. `supabase/codex_rules_seed.sql` — seeds de regras (rodar após o seed principal)
 
 ### Padrão para nova ferramenta
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Dice6, User, Map, Table2, BookOpen, X } from 'lucide-react'
+import { Dice6, User, Map, Table2, BookOpen, X, Library } from 'lucide-react'
 
 interface ToolItem {
   label: string
@@ -14,7 +14,8 @@ interface ToolItem {
 const tools: ToolItem[] = [
   { label: 'Rolador de Dados',      href: '/tools/dice-roller',         icon: <Dice6 size={16} />,    active: true  },
   { label: 'Diário de Aventura',    href: '/tools/adventure-diary',     icon: <BookOpen size={16} />, active: true  },
-  { label: 'Ficha de Personagem',   href: '/tools/character-sheet',    icon: <User size={16} />,     active: true  },
+  { label: 'Ficha de Personagem',   href: '/tools/character-sheet',     icon: <User size={16} />,     active: true  },
+  { label: 'Codex',                 href: '/tools/codex',               icon: <Library size={16} />,  active: true  },
   { label: 'Tabelas de Encontro',   href: '/tools/encounter-tables',    icon: <Table2 size={16} />,   active: false },
   { label: 'Mapa de Masmorra',      href: '/tools/dungeon-map',         icon: <Map size={16} />,      active: false },
 ]
