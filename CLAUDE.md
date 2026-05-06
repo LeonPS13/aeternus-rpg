@@ -45,6 +45,7 @@ app/
   tools/
     dice-roller/page.tsx
     adventure-diary/page.tsx
+    character-sheet/page.tsx
 
 components/
   layout/
@@ -56,15 +57,30 @@ components/
     AdventureDiary/            Diário de aventura (Supabase)
       adventureIcons.tsx       Lista de 18 ícones RPG + componente IconPicker
       EditAdventureModal.tsx   Modal para editar nome e ícone da aventura
+    CharacterSheet/            Ficha de personagem D&D 5e SRD (Supabase)
+      index.tsx                Orquestrador — 4 modos: list / create / view / edit
+      CharacterList.tsx        Lista de fichas com confirmação de exclusão
+      WizardView.tsx           Criação passo a passo (5 etapas sequenciais)
+      CharacterView.tsx        Visão de leitura com edição rápida inline
+      SheetView.tsx            Edição completa com abas livres
+      sections/
+        IdentitySection.tsx
+        StatsSection.tsx
+        CombatSection.tsx
+        EquipmentSection.tsx
+        TraitsSection.tsx
 
 lib/
   supabase.ts                  Client Supabase singleton (createClient)
   dice.ts                      Lógica de rolagem (crypto.getRandomValues + rejection sampling)
   adventure.ts                 CRUD Supabase para Adventure/DiaryEntry
+  character.ts                 CRUD Supabase para Character (getCharacters, saveCharacter, deleteCharacter, createEmptyCharacter)
+  character-calc.ts            Cálculos D&D 5e SRD: mod(), profBonus(), calcAC(), calcInitiative(), calcSkillValue(), etc.
 
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
   adventure.ts                 Adventure, DiaryEntry, ActiveTab
+  character.ts                 Character, CharacterAttack, InventoryItem, Skills, CLASSES, RACES, ALIGNMENTS
 
 .env.local                     NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY (não commitado)
 ```
@@ -149,6 +165,7 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 |---|---|---|
 | Rolador de Dados | `/tools/dice-roller` | `components/tools/DiceRoller/index.tsx` |
 | Diário de Aventura | `/tools/adventure-diary` | `components/tools/AdventureDiary/index.tsx` |
+| Ficha de Personagem | `/tools/character-sheet` | `components/tools/CharacterSheet/index.tsx` |
 
 ### Padrão para nova ferramenta
 
@@ -165,11 +182,40 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 - `FormEvent` do React está deprecado no React 19 — usar `React.SyntheticEvent` inline sem importar
 - Todas as funções de lib/adventure.ts são async (exceto `getPlayerId` e `generateAdventureId`)
 - Mapeamento snake_case (DB) ↔ camelCase (TypeScript) feito nas funções de lib
+- Inputs numéricos usam padrão `NumInput`: estado local string + normalização no `onBlur` (permite apagar e redigitar sem travar em 0)
+- Auto-save da ficha: `isDirty` ref + `useEffect` debounce 1500ms; flush imediato no `onBack`
+
+---
+
+## Ficha de Personagem — Supabase
+
+**Tabela:** `characters`
+
+Campos relevantes: `id`, `player_id`, `character_name`, `class`, `level`, `race`, `background`, `alignment`, `xp`, atributos (`str_score`…`cha_score`), combate (`ac_*`, `speed`, `initiative_bonus`), HP (`max_hp`, `current_hp`, `temp_hp`, `hit_dice_spent`), saves (`save_*_proficient`), `skills` (JSONB), `attacks` (JSONB), moedas (`cp`, `sp`, `ep`, `gp`, `pp`), `inventory` (JSONB — `{id, name, quantity, weight, description?}`), traços (`personality_traits`, `ideals`, `bonds`, `flaws`, `features_traits`, `other_proficiencies`).
+
+> EP (Electrum) existe no schema mas é ocultado da UI — sem migração necessária.
+
+**Funções em `lib/character.ts`:**
+
+| Função | Descrição |
+|---|---|
+| `createEmptyCharacter(playerId)` | sync — retorna Character com defaults |
+| `getCharacters(playerId)` | async — lista por player_id, ordem updated_at desc |
+| `saveCharacter(character)` | async — upsert por id |
+| `deleteCharacter(id)` | async — delete por id |
+
+**Modos do orquestrador (`index.tsx`):**
+
+| Modo | Componente | Descrição |
+|---|---|---|
+| `list` | `CharacterList` | Biblioteca de fichas |
+| `create` | `WizardView` | 5 etapas sequenciais; save só na última |
+| `view` | `CharacterView` | Leitura com edição inline (HP, moedas, inventário, ataques) |
+| `edit` | `SheetView` | Abas livres, botão Salvar sempre visível |
 
 ---
 
 ## Ferramentas planejadas (ainda não implementadas)
 
-- Gerador de Personagem (`/tools/character-generator`)
 - Tabelas de Encontro (`/tools/encounter-tables`)
 - Mapa de Masmorra (`/tools/dungeon-map`)
