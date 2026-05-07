@@ -36,6 +36,23 @@ export default function ArmorSelector({ char, onChange, onItemAdd, onItemRemove 
   const armorList  = armors.filter(a => a.subtype !== 'shield')
   const shieldList = armors.filter(a => a.subtype === 'shield')
 
+  // Restore dropdown selection from saved character data when armors load
+  useEffect(() => {
+    if (armors.length === 0) return
+    if (char.acArmorType !== 'none' && char.acArmorEquipped > 0) {
+      const match = armors.find(
+        a => a.subtype === char.acArmorType && (a.data.ac_base as number) === char.acArmorEquipped
+      )
+      if (match) setSelectedArmorId(match.id)
+    }
+    if (char.acShieldBonus > 0) {
+      const match = armors.find(
+        a => a.subtype === 'shield' && (a.data.ac_bonus as number) === char.acShieldBonus
+      )
+      if (match) setSelectedShieldId(match.id)
+    }
+  }, [armors]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleArmorChange(id: string) {
     const prevEntry = armors.find(a => a.id === selectedArmorId)
     if (prevEntry) onItemRemove(prevEntry.name)

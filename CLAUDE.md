@@ -193,6 +193,8 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 - `.arcane-btn` — botão com clip-path octogonal e gradiente vermelho
 - `.ornament-divider` — divisor com linhas e diamante dourado
 - `.section-label` — label de seção, letra dourada
+- `.attack-row` — flex row responsivo para linhas da tabela de ataques (`flex-col` mobile → `flex-row` sm+, gap `0.5rem`)
+- `.attack-col` — coluna de distribuição igual (`flex: 1 1 0%; min-width: 0`) dentro de `.attack-row`
 
 **Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 22px }` desktop / `18px` mobile (`@media (max-width: 767px)`) — escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
 
@@ -273,6 +275,7 @@ Ferramenta de consulta somente leitura. Carrega todos os itens do Supabase de um
 - Mapeamento snake_case (DB) ↔ camelCase (TypeScript) feito nas funções de lib
 - Inputs numéricos usam padrão `NumInput`: estado local string + normalização no `onBlur` (permite apagar e redigitar sem travar em 0)
 - Auto-save da ficha: `isDirty` ref + `useEffect` debounce 1500ms; flush imediato no `onBack`
+- **Tailwind v4 — layouts complexos:** valores arbitrários com `()` e vírgulas (ex: `grid-cols-[minmax(0,1fr)_...]`) podem não ser gerados corretamente pelo parser. Para layouts responsivos que dependem de `flex: 1 1 0%` / `min-width: 0` / `minmax`, definir classes CSS diretamente em `globals.css` com `@media` queries explícitas em vez de classes Tailwind arbitrárias.
 
 ---
 
@@ -301,6 +304,10 @@ Campos relevantes: `id`, `player_id`, `character_name`, `class`, `level`, `race`
 | `create` | `WizardView` | 5 etapas sequenciais; save só na última |
 | `view` | `CharacterView` | Leitura com edição inline (HP, moedas, inventário, ataques) |
 | `edit` | `SheetView` | Abas livres, botão Salvar sempre visível |
+
+**`ArmorSelector.tsx`:** restaura a seleção do dropdown (armadura/escudo) a partir dos campos `acArmorType`/`acArmorEquipped`/`acShieldBonus` do personagem via `useEffect` disparado quando a lista de armaduras carrega do Codex. Sem isso, o dropdown volta a "Sem armadura" ao reabrir a ficha mesmo com o item salvo no inventário.
+
+**`CombatSection.tsx` — tabela de ataques:** usa classes CSS globais `.attack-row` / `.attack-col` definidas em `globals.css` (não Tailwind). O dropdown de atributo ("FOR▾") é um componente `StatDropdown` customizado (não `<select>` nativo) para controle preciso do layout.
 
 ---
 

@@ -82,6 +82,53 @@ function updateAttack(attacks: CharacterAttack[], id: string, updates: Partial<C
   return attacks.map((a) => a.id === id ? { ...a, ...updates } : a)
 }
 
+const STAT_OPTIONS: { val: AttackStat | ''; label: string }[] = [
+  { val: '', label: '—' },
+  { val: 'str', label: 'FOR' },
+  { val: 'dex', label: 'DES' },
+  { val: 'con', label: 'CON' },
+  { val: 'int', label: 'INT' },
+  { val: 'wis', label: 'SAB' },
+  { val: 'cha', label: 'CAR' },
+]
+
+function StatDropdown({ value, onChange: onCh }: { value: AttackStat | ''; onChange: (v: AttackStat | '') => void }) {
+  const [open, setOpen] = useState(false)
+  const current = STAT_OPTIONS.find(o => o.val === value) ?? STAT_OPTIONS[0]
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-0.5 rounded py-1 pl-1 pr-1 text-xs"
+        style={{ ...inputStyle, color: value ? 'var(--color-gold-dark)' : 'var(--color-text-muted)' }}
+      >
+        <span>{current.label}</span>
+        <span style={{ fontSize: '0.5rem', lineHeight: 1, marginTop: '1px' }}>▾</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full z-20 overflow-hidden rounded"
+            style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-default)', minWidth: '3.5rem' }}>
+            {STAT_OPTIONS.map(({ val, label }) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => { onCh(val); setOpen(false) }}
+                className="block w-full px-2 py-0.5 text-left text-xs"
+                style={{ color: value === val ? 'var(--color-gold-light)' : 'var(--color-text-muted)' }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function baseWeaponName(name: string): string {
   return name.replace(/ \(1 mão\)$/, '').replace(/ \(2 mãos\)$/, '')
 }
@@ -275,10 +322,13 @@ export default function CombatSection({ char, onChange }: Props) {
         ) : (
           <div className="space-y-2">
             {/* Header */}
-            <div className="hidden grid-cols-[1fr_4rem_5rem_5rem_5rem_2rem] gap-2 sm:grid">
-              {['Nome', 'Attr', 'Bônus', 'Dano', 'Tipo', ''].map((h, i) => (
-                <span key={i} className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{h}</span>
-              ))}
+            <div className="hidden sm:flex sm:items-center sm:gap-2">
+              <span className="text-xs" style={{ flex: '1 1 0%', minWidth: 0, color: 'var(--color-text-muted)' }}>Nome</span>
+              <span className="text-xs" style={{ flexShrink: 0, color: 'var(--color-text-muted)' }}>Attr</span>
+              <span className="text-xs" style={{ flex: '1 1 0%', minWidth: 0, color: 'var(--color-text-muted)' }}>Bônus</span>
+              <span className="text-xs" style={{ flex: '1 1 0%', minWidth: 0, color: 'var(--color-text-muted)' }}>Dano</span>
+              <span className="text-xs" style={{ flex: '1 1 0%', minWidth: 0, color: 'var(--color-text-muted)' }}>Tipo</span>
+              <span style={{ width: '2rem', flexShrink: 0 }} />
             </div>
 
             {char.attacks.map((atk) => {
@@ -290,56 +340,52 @@ export default function CombatSection({ char, onChange }: Props) {
                   })()
                 : null
               return (
-                <div key={atk.id}
-                  className="grid grid-cols-1 gap-2 rounded p-2 sm:grid-cols-[1fr_4rem_5rem_5rem_5rem_2rem]"
-                  style={{ background: 'var(--color-bg-tertiary)' }}>
-                  <input
-                    value={atk.name}
-                    onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { name: e.target.value }) })}
-                    placeholder="Nome da arma/magia"
-                    className="px-2 py-1 text-sm"
-                    style={inputStyle}
-                  />
-                  <select
+                <div key={atk.id} className="attack-row" style={{ background: 'var(--color-bg-tertiary)' }}>
+                  <div className="attack-col">
+                    <input
+                      value={atk.name}
+                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { name: e.target.value }) })}
+                      placeholder="Nome da arma/magia"
+                      className="px-2 py-1 text-sm"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <StatDropdown
                     value={atk.stat ?? ''}
-                    onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { stat: (e.target.value as AttackStat) || undefined }) })}
-                    className="px-1 py-1 text-xs"
-                    style={{ ...inputStyle, color: atk.stat ? 'var(--color-gold-dark)' : 'var(--color-text-muted)' }}
-                  >
-                    <option value="">—</option>
-                    <option value="str">FOR</option>
-                    <option value="dex">DES</option>
-                    <option value="con">CON</option>
-                    <option value="int">INT</option>
-                    <option value="wis">SAB</option>
-                    <option value="cha">CAR</option>
-                  </select>
-                  <input
-                    value={auto ?? atk.attackBonus}
-                    readOnly={!!auto}
-                    onChange={(e) => !auto && onChange({ attacks: updateAttack(char.attacks, atk.id, { attackBonus: e.target.value }) })}
-                    placeholder="+5"
-                    className="px-2 py-1 text-sm"
-                    style={{ ...inputStyle, color: auto ? 'var(--color-gold)' : inputStyle.color, cursor: auto ? 'default' : 'text' }}
+                    onChange={(val) => onChange({ attacks: updateAttack(char.attacks, atk.id, { stat: (val as AttackStat) || undefined }) })}
                   />
-                  <input
-                    value={autoDmg ?? atk.damage}
-                    readOnly={!!autoDmg}
-                    onChange={(e) => !autoDmg && onChange({ attacks: updateAttack(char.attacks, atk.id, { damage: e.target.value }) })}
-                    placeholder="1d8+3"
-                    className="px-2 py-1 text-sm"
-                    style={{ ...inputStyle, color: autoDmg ? 'var(--color-gold)' : inputStyle.color, cursor: autoDmg ? 'default' : 'text' }}
-                  />
-                  <input
-                    value={atk.damageType}
-                    onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { damageType: e.target.value }) })}
-                    placeholder="Cortante"
-                    className="px-2 py-1 text-sm"
-                    style={inputStyle}
-                  />
+                  <div className="attack-col">
+                    <input
+                      value={auto ?? atk.attackBonus}
+                      readOnly={!!auto}
+                      onChange={(e) => !auto && onChange({ attacks: updateAttack(char.attacks, atk.id, { attackBonus: e.target.value }) })}
+                      placeholder="+5"
+                      className="px-2 py-1 text-sm"
+                      style={{ ...inputStyle, color: auto ? 'var(--color-gold)' : inputStyle.color, cursor: auto ? 'default' : 'text' }}
+                    />
+                  </div>
+                  <div className="attack-col">
+                    <input
+                      value={autoDmg ?? atk.damage}
+                      readOnly={!!autoDmg}
+                      onChange={(e) => !autoDmg && onChange({ attacks: updateAttack(char.attacks, atk.id, { damage: e.target.value }) })}
+                      placeholder="1d8+3"
+                      className="px-2 py-1 text-sm"
+                      style={{ ...inputStyle, color: autoDmg ? 'var(--color-gold)' : inputStyle.color, cursor: autoDmg ? 'default' : 'text' }}
+                    />
+                  </div>
+                  <div className="attack-col">
+                    <input
+                      value={atk.damageType}
+                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { damageType: e.target.value }) })}
+                      placeholder="Cortante"
+                      className="px-2 py-1 text-sm"
+                      style={inputStyle}
+                    />
+                  </div>
                   <button onClick={() => removeAttack(atk.id)}
                     className="flex items-center justify-center rounded transition-colors"
-                    style={{ color: 'var(--color-text-muted)' }}>
+                    style={{ width: '2rem', flexShrink: 0, color: 'var(--color-text-muted)' }}>
                     <Trash2 size={13} />
                   </button>
                 </div>
