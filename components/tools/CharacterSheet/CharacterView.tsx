@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, Edit2, Trash2, Plus, BookOpen, Star } from 'lucide-react'
-import type { Character, CharacterAttack, InventoryItem } from '@/types/character'
+import type { Character, CharacterAttack, InventoryItem, AttackStat } from '@/types/character'
 import { SKILL_NAMES } from '@/types/character'
 import {
   ATTR_DEFS, SAVE_DEFS, SKILL_LABELS, SKILL_ATTR_ABBR,
   mod, profBonus, fmtMod, calcAC, calcInitiative, calcPassivePerception,
-  calcSkillValue, calcSaveValue, HIT_DICE_BY_CLASS,
+  calcSkillValue, calcSaveValue, calcAttackBonus, HIT_DICE_BY_CLASS, STAT_TO_ATTR,
 } from '@/lib/character-calc'
 import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
 import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
@@ -35,6 +35,22 @@ function StatPill({ label, value }: { label: string; value: string | number }) {
       <span className="text-2xl leading-none" style={{ color: 'var(--color-gold-light)' }}>{value}</span>
       <span className="text-center text-sm leading-tight" style={{ color: 'var(--color-text-muted)' }}>{label}</span>
     </div>
+  )
+}
+
+function InspirationPill({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex flex-col items-center gap-0.5 rounded px-2 py-1.5 transition-colors"
+      style={{
+        background: active ? 'var(--color-gold-glow)' : 'var(--color-bg-secondary)',
+        border: `1px solid ${active ? 'var(--color-gold)' : 'var(--color-border-default)'}`,
+      }}
+    >
+      <span className="text-2xl leading-none" style={{ color: active ? 'var(--color-gold-light)' : 'var(--color-text-muted)' }}>✦</span>
+      <span className="text-center text-sm leading-tight" style={{ color: active ? 'var(--color-gold-dark)' : 'var(--color-text-muted)' }}>Inspiração</span>
+    </button>
   )
 }
 
@@ -228,13 +244,14 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
       </div>
 
       {/* Key stats */}
-      <div className="mb-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
+      <div className="mb-6 grid grid-cols-4 gap-2 sm:grid-cols-7">
         <StatPill label="CA" value={calcAC(char)} />
         <StatPill label="Iniciativa" value={fmtMod(calcInitiative(char))} />
         <StatPill label="Deslocamento" value={`${char.speed} ft`} />
         <StatPill label="PV Máx." value={char.maxHp} />
         <StatPill label="Perc. Passiva" value={calcPassivePerception(char)} />
         <StatPill label="Bônus Prof." value={`+${pb}`} />
+        <InspirationPill active={!!char.inspiration} onToggle={() => onChange({ inspiration: !char.inspiration })} />
       </div>
 
       {/* Two-column body */}
@@ -366,9 +383,6 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
               </div>
             </div>
 
-            {char.inspiration && (
-              <p className="mt-2 text-center text-xs" style={{ color: 'var(--color-gold)' }}>✦ Inspiração</p>
-            )}
             {(char.deathSavesSuccess > 0 || char.deathSavesFailure > 0) && (
               <div className="mt-2 flex justify-center gap-6 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 <span>Sucessos: <span style={{ color: 'var(--color-gold)' }}>{char.deathSavesSuccess}</span></span>
@@ -446,50 +460,76 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
               <div className="space-y-1">
                 <div className="flex items-center px-2 pb-1">
                   <span className="min-w-0 flex-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>Nome</span>
+                  <span className="w-10 shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>Attr</span>
                   <span className="w-14 shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>Bônus</span>
                   <span className="w-14 shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>Dano</span>
                   <span className="w-14 shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>Tipo</span>
                   <span className="w-6 shrink-0" />
                 </div>
-                {char.attacks.map((atk) => (
-                  <div key={atk.id}
-                    className="flex items-center rounded px-2 py-1.5"
-                    style={{ background: 'var(--color-bg-tertiary)' }}>
-                    <input
-                      value={atk.name}
-                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { name: e.target.value }) })}
-                      placeholder="Nome"
-                      className="min-w-0 flex-1 text-sm"
-                      style={{ ...inputBase, color: 'var(--color-text-primary)' }}
-                    />
-                    <input
-                      value={atk.attackBonus}
-                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { attackBonus: e.target.value }) })}
-                      placeholder="+0"
-                      className="w-14 shrink-0 text-sm"
-                      style={{ ...inputBase, color: 'var(--color-gold-light)' }}
-                    />
-                    <input
-                      value={atk.damage}
-                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { damage: e.target.value }) })}
-                      placeholder="1d6"
-                      className="w-14 shrink-0 text-sm"
-                      style={{ ...inputBase, color: 'var(--color-text-secondary)' }}
-                    />
-                    <input
-                      value={atk.damageType}
-                      onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { damageType: e.target.value }) })}
-                      placeholder="Tipo"
-                      className="w-14 shrink-0 text-sm"
-                      style={{ ...inputBase, color: 'var(--color-text-muted)' }}
-                    />
-                    <button onClick={() => removeAttack(atk.id)}
-                      className="flex w-6 shrink-0 items-center justify-center rounded"
-                      style={{ color: 'var(--color-text-muted)' }}>
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))}
+                {char.attacks.map((atk) => {
+                  const auto = atk.stat ? calcAttackBonus(char, atk.stat) : null
+                  const autoDmg = (atk.stat && atk.damageDice)
+                    ? (() => {
+                        const m = mod(char[STAT_TO_ATTR[atk.stat]] as number) + (atk.magicBonus ?? 0)
+                        return m > 0 ? `${atk.damageDice} + ${m}` : m < 0 ? `${atk.damageDice} - ${Math.abs(m)}` : atk.damageDice
+                      })()
+                    : null
+                  return (
+                    <div key={atk.id}
+                      className="flex items-center rounded px-2 py-1.5"
+                      style={{ background: 'var(--color-bg-tertiary)' }}>
+                      <input
+                        value={atk.name}
+                        onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { name: e.target.value }) })}
+                        placeholder="Nome"
+                        className="min-w-0 flex-1 text-sm"
+                        style={{ ...inputBase, color: 'var(--color-text-primary)' }}
+                      />
+                      <select
+                        value={atk.stat ?? ''}
+                        onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { stat: (e.target.value as AttackStat) || undefined }) })}
+                        className="w-10 shrink-0 text-xs"
+                        style={{ ...inputBase, color: atk.stat ? 'var(--color-gold-dark)' : 'var(--color-text-muted)' }}
+                      >
+                        <option value="">—</option>
+                        <option value="str">FOR</option>
+                        <option value="dex">DES</option>
+                        <option value="con">CON</option>
+                        <option value="int">INT</option>
+                        <option value="wis">SAB</option>
+                        <option value="cha">CAR</option>
+                      </select>
+                      <input
+                        value={auto ?? atk.attackBonus}
+                        readOnly={!!auto}
+                        onChange={(e) => !auto && onChange({ attacks: updateAttack(char.attacks, atk.id, { attackBonus: e.target.value }) })}
+                        placeholder="+0"
+                        className="w-14 shrink-0 text-sm"
+                        style={{ ...inputBase, color: auto ? 'var(--color-gold)' : 'var(--color-gold-light)', cursor: auto ? 'default' : 'text' }}
+                      />
+                      <input
+                        value={autoDmg ?? atk.damage}
+                        readOnly={!!autoDmg}
+                        onChange={(e) => !autoDmg && onChange({ attacks: updateAttack(char.attacks, atk.id, { damage: e.target.value }) })}
+                        placeholder="1d6"
+                        className="w-14 shrink-0 text-sm"
+                        style={{ ...inputBase, color: autoDmg ? 'var(--color-gold)' : 'var(--color-text-secondary)', cursor: autoDmg ? 'default' : 'text' }}
+                      />
+                      <input
+                        value={atk.damageType}
+                        onChange={(e) => onChange({ attacks: updateAttack(char.attacks, atk.id, { damageType: e.target.value }) })}
+                        placeholder="Tipo"
+                        className="w-14 shrink-0 text-sm"
+                        style={{ ...inputBase, color: 'var(--color-text-muted)' }}
+                      />
+                      <button onClick={() => removeAttack(atk.id)}
+                        className="flex w-6 shrink-0 items-center justify-center rounded"
+                        style={{ color: 'var(--color-text-muted)' }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

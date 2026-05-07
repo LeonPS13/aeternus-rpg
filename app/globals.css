@@ -5,7 +5,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-jacquard);
+  --font-sans: var(--font-theme);
   --font-mono: var(--font-geist-mono);
 
   --animate-fade-up: fade-up 0.4s ease-out forwards;
@@ -15,28 +15,33 @@
 }
 
 :root {
-  --background: #181208;
+  --background: #2E2410;
   --foreground: #F0E6CC;
+  --font-theme: var(--font-jacquard);
 
-  --color-bg-primary: #181208;
-  --color-bg-secondary: #261C0E;
-  --color-bg-tertiary: #322412;
-  --color-bg-mortar: #100D06;
+  --color-logo-glow: rgba(201,168,76,0.6);
+  --nav-icon-filter-active:   brightness(0) invert(60%) sepia(60%) saturate(400%) hue-rotate(4deg) brightness(82%);
+  --nav-icon-filter-inactive: brightness(0) invert(50%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(90%);
+
+  --color-bg-primary: #2E2410;
+  --color-bg-secondary: #3D3018;
+  --color-bg-tertiary: #4E3D20;
+  --color-bg-mortar: #211A0B;
 
   --color-gold: #C9A84C;
   --color-gold-light: #E8C96A;
-  --color-gold-dark: #8B6914;
-  --color-gold-glow: rgba(201, 168, 76, 0.15);
+  --color-gold-dark: #9B7A1E;
+  --color-gold-glow: rgba(201, 168, 76, 0.18);
 
   --color-accent: #7B1E1E;
   --color-accent-hover: #8B1E1E;
 
-  --color-text-primary: #F0E6CC;
-  --color-text-secondary: #A89060;
-  --color-text-muted: #6A5830;
+  --color-text-primary: #F5EDD8;
+  --color-text-secondary: #D8C490;
+  --color-text-muted: #A89060;
 
-  --color-border-default: rgba(201, 168, 76, 0.3);
-  --color-border-hover: rgba(201, 168, 76, 0.5);
+  --color-border-default: rgba(201, 168, 76, 0.45);
+  --color-border-hover: rgba(201, 168, 76, 0.6);
   --color-border-active: #C9A84C;
 }
 
@@ -60,7 +65,7 @@ body {
 body {
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
-  font-family: var(--font-jacquard), system-ui, sans-serif;
+  font-family: var(--font-theme, var(--font-jacquard)), system-ui, sans-serif;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
 }
 
@@ -178,3 +183,349 @@ body {
   70%  { transform: scale(1.15) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* ── Ambient glow (grimório padrão) ─────────────────────────── */
+.ambient-glow {
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.04) 0%, transparent 60%);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TEMA: Futuro Cibernético
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.theme-cyber {
+  --background:               #050510;
+  --foreground:               #E8F4FF;
+
+  --color-bg-primary:         #050510;
+  --color-bg-secondary:       #0A0A1E;
+  --color-bg-tertiary:        #0F0F2A;
+  --color-bg-mortar:          #020209;
+
+  --color-gold:               #00F5D4;
+  --color-gold-light:         #4DFFE8;
+  --color-gold-dark:          #007A6A;
+  --color-gold-glow:          rgba(0, 245, 212, 0.05);
+
+  --color-accent:             #F72585;
+  --color-accent-hover:       #FF3D8A;
+
+  --color-text-primary:       #E8F4FF;
+  --color-text-secondary:     #607090;
+  --color-text-muted:         #384060;
+
+  --color-border-default:     rgba(0, 245, 212, 0.15);
+  --color-border-hover:       rgba(0, 245, 212, 0.5);
+  --color-border-active:      #00F5D4;
+
+  --color-cyan:               #00F5D4;
+  --color-magenta:            #F72585;
+
+  --color-logo-glow:          rgba(0, 245, 212, 0.6);
+  --font-theme:               var(--font-jersey);
+
+  --nav-icon-filter-active:   brightness(0) invert(1) sepia(1) saturate(3000%) hue-rotate(140deg) brightness(90%);
+  --nav-icon-filter-inactive: brightness(0) invert(1) sepia(1) saturate(500%)  hue-rotate(140deg) brightness(35%);
+}
+
+/* Body: remove ruído, adiciona scanlines */
+.theme-cyber body {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 245, 212, 0.006) 2px,
+    rgba(0, 245, 212, 0.006) 4px
+  );
+}
+
+/* Ambient glow: vignette ciano */
+.theme-cyber .ambient-glow {
+  background: radial-gradient(ellipse at 20% 50%, rgba(0, 245, 212, 0.025) 0%, transparent 60%);
+}
+
+/* Sidebar: scanlines sutis */
+.theme-cyber aside {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 30px,
+    rgba(0, 245, 212, 0.02) 31px
+  );
+}
+
+/* arcane-panel: cantos retos + barras ciano/magenta */
+.theme-cyber .arcane-panel {
+  border-radius: 0;
+}
+.theme-cyber .arcane-panel::before {
+  top: 0; left: 0; bottom: auto; right: auto;
+  width: 40px; height: 2px;
+  border: none;
+  background: var(--color-cyan);
+  opacity: 1;
+}
+.theme-cyber .arcane-panel::after {
+  bottom: 0; right: 0; top: auto; left: auto;
+  width: 40px; height: 2px;
+  border: none;
+  background: var(--color-magenta);
+  opacity: 1;
+}
+
+/* arcane-btn: estilo magenta com varredura no hover */
+.theme-cyber .arcane-btn {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--color-magenta);
+  color: var(--color-magenta);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.theme-cyber .arcane-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(247, 37, 133, 0.15), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s;
+  pointer-events: none;
+}
+.theme-cyber .arcane-btn:hover:not(:disabled)::before {
+  transform: translateX(100%);
+}
+.theme-cyber .arcane-btn:hover:not(:disabled) {
+  background: transparent;
+  box-shadow: 0 0 30px rgba(247, 37, 133, 0.4), inset 0 0 30px rgba(247, 37, 133, 0.1);
+}
+.theme-cyber .arcane-btn:disabled {
+  opacity: 0.3;
+}
+
+/* section-label: estilo cyber */
+.theme-cyber .section-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--color-cyan);
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+
+/* chips: padding simétrico para Jersey 10 */
+.theme-cyber .result-chip { padding-top: 0.25rem !important; padding-bottom: 0.25rem !important; }
+
+/* modais: padding reduzido no cyber */
+.theme-cyber .modal-header { padding: 0.6rem 1rem; }
+.theme-cyber .modal-body   { padding: 0.75rem 1rem; }
+
+/* ornament-divider: linha gradiente ciana */
+.theme-cyber .ornament-divider {
+  display: block;
+  height: 1px;
+  margin: 16px 0;
+  background: linear-gradient(90deg, var(--color-cyan), rgba(0, 245, 212, 0.2), transparent);
+  box-shadow: 0 0 8px rgba(0, 245, 212, 0.3);
+  gap: 0;
+}
+.theme-cyber .ornament-line,
+.theme-cyber .ornament-diamond {
+  display: none;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TEMA: Acidente Nuclear
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+.theme-nuclear {
+  --background:               #0A0906;
+  --foreground:               #F4E8C1;
+
+  --color-bg-primary:         #0A0906;
+  --color-bg-secondary:       #12100B;
+  --color-bg-tertiary:        #1A170F;
+
+  --color-gold:               #FFD60A;
+  --color-gold-light:         #FFE44A;
+  --color-gold-dark:          #8A7000;
+  --color-gold-glow:          rgba(255, 214, 10, 0.12);
+
+  --color-accent:             #FF9F1C;
+  --color-accent-hover:       #FFB040;
+
+  --color-text-primary:       #F4E8C1;
+  --color-text-secondary:     #9E9270;
+  --color-text-muted:         #5F5848;
+
+  --color-border-default:     rgba(255, 214, 10, 0.14);
+  --color-border-hover:       rgba(255, 214, 10, 0.4);
+  --color-border-active:      #FFD60A;
+
+  --color-logo-glow:          rgba(255, 214, 10, 0.5);
+  --font-theme:               var(--font-teko);
+
+  --nav-icon-filter-active:   brightness(0) invert(1) sepia(1) saturate(3000%) hue-rotate(5deg) brightness(100%);
+  --nav-icon-filter-inactive: brightness(0) invert(1) sepia(1) saturate(300%)  hue-rotate(5deg) brightness(30%);
+}
+
+/* Body: background direto + scanlines + poeira radioativa */
+.theme-nuclear body {
+  background-color: #0A0906;
+  color: #F4E8C1;
+  font-family: var(--font-teko), system-ui, sans-serif;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 214, 10, 0.01) 4px
+    ),
+    radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: auto, 6px 6px;
+}
+
+/* Ambient glow: brilho radioativo lateral */
+.theme-nuclear .ambient-glow {
+  background: radial-gradient(circle at left center, rgba(255, 214, 10, 0.06) 0%, transparent 40%);
+}
+
+/* Sidebar: linhas horizontais industriais */
+.theme-nuclear aside {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 24px,
+      rgba(255, 214, 10, 0.025) 25px
+    );
+}
+
+/* arcane-panel: placa metálica industrial */
+.theme-nuclear .arcane-panel {
+  border-radius: 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.01) 0px,
+      rgba(255, 255, 255, 0.01) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 214, 10, 0.03),
+    inset 0 0 40px rgba(255, 214, 10, 0.02),
+    0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+/* Linha de energia no topo do painel */
+.theme-nuclear .arcane-panel::before {
+  top: 0; left: 0; bottom: auto; right: auto;
+  width: 100%; height: 2px;
+  border: none;
+  background: linear-gradient(90deg, transparent, #FFD60A, transparent);
+  opacity: 0.6;
+}
+
+/* Indicador de radiação — ponto âmbar brilhante top-right */
+.theme-nuclear .arcane-panel::after {
+  top: 10px; right: 10px; bottom: auto; left: auto;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #FFD60A;
+  box-shadow: 0 0 8px rgba(255, 214, 10, 0.6), 0 0 18px rgba(255, 214, 10, 0.3);
+  opacity: 1;
+}
+
+/* arcane-btn: placa industrial com stripes de perigo */
+.theme-nuclear .arcane-btn {
+  position: relative;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 214, 10, 0.05),
+      rgba(255, 214, 10, 0.05) 8px,
+      transparent 8px,
+      transparent 16px
+    ),
+    linear-gradient(180deg, rgba(255, 214, 10, 0.12), rgba(255, 214, 10, 0.04));
+  border: 1px solid rgba(255, 214, 10, 0.35);
+  color: #FFD60A;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.theme-nuclear .arcane-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 214, 10, 0.12), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s;
+  pointer-events: none;
+}
+.theme-nuclear .arcane-btn:hover:not(:disabled) {
+  border-color: #FFD60A;
+  box-shadow: 0 0 20px rgba(255, 214, 10, 0.25), inset 0 0 30px rgba(255, 214, 10, 0.08);
+}
+.theme-nuclear .arcane-btn:hover:not(:disabled)::before {
+  transform: translateX(100%);
+}
+.theme-nuclear .arcane-btn:disabled {
+  opacity: 0.3;
+}
+
+/* section-label: terminal militar */
+.theme-nuclear .section-label {
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  color: #FFD60A;
+  opacity: 0.65;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(255, 214, 10, 0.3);
+}
+
+/* ornament-divider: hazard industrial com ☢ */
+.theme-nuclear .ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0.7;
+}
+.theme-nuclear .ornament-line {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(
+    90deg,
+    #FFD60A, #FFD60A 8px,
+    transparent 8px, transparent 16px
+  );
+}
+.theme-nuclear .ornament-diamond {
+  width: auto;
+  height: auto;
+  background: none;
+  transform: none;
+  font-size: 12px;
+  color: #FFD60A;
+  text-shadow: 0 0 10px rgba(255, 214, 10, 0.5);
+}
+.theme-nuclear .ornament-diamond::after {
+  content: '☢';
+}
+
+/* chips: Teko senta alto no em box — pt maior empurra o glifo visualmente para baixo */
+.theme-nuclear .result-chip { padding-top: 0.4rem !important; padding-bottom: 0.1rem !important; }
+
+/* modais: padding reduzido */
+.theme-nuclear .modal-header { padding: 0.6rem 1rem; }
+.theme-nuclear .modal-body   { padding: 0.75rem 1rem; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TEMA: Grimório Arcano (overrides pontuais — padrão é o :root)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* sidebar: Jacquard 12 é larga — reduz levemente para não quebrar linha */
+.theme-grimoire aside .text-base { font-size: 0.875rem; }

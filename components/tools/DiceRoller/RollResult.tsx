@@ -38,7 +38,7 @@ export default function RollResult({ result }: RollResultProps) {
         {result.rolls.map((roll, idx) => (
           <span
             key={idx}
-            className="inline-flex min-w-[2.5rem] animate-[chip-pop_0.3s_cubic-bezier(0.34,1.56,0.64,1)_forwards] items-center justify-center rounded px-1.5 pb-1 pt-0 font-sans text-2xl leading-none"
+            className="result-chip inline-flex min-w-[2.5rem] animate-[chip-pop_0.3s_cubic-bezier(0.34,1.56,0.64,1)_forwards] items-center justify-center rounded px-1.5 pb-1 pt-0 font-sans text-2xl leading-none"
             style={{
               background: 'var(--color-accent)',
               border: '1px solid rgba(201,168,76,0.3)',
@@ -51,7 +51,7 @@ export default function RollResult({ result }: RollResultProps) {
           </span>
         ))}
         {result.modifier !== 0 && (
-          <span className="inline-flex items-center rounded px-1.5 pb-1 pt-0 font-sans text-2xl leading-none"
+          <span className="result-chip inline-flex items-center rounded px-1.5 pb-1 pt-0 font-sans text-2xl leading-none"
             style={{ border: '1px solid rgba(201,168,76,0.4)', background: 'var(--color-gold-glow)', color: 'var(--color-gold)' }}>
             {result.modifier > 0 ? `+${result.modifier}` : result.modifier}
           </span>

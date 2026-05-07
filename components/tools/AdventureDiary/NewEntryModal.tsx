@@ -64,7 +64,7 @@ export default function NewEntryModal({ adventureId, authorId, diaryType, initia
     >
       <div className="arcane-panel animate-[fade-up_0.25s_ease-out_forwards] w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4"
+        <div className="modal-header flex items-center justify-between px-6 py-4"
           style={{ borderBottom: '1px solid var(--color-border-default)' }}>
           <div>
             <h2 className="text-lg" style={{ color: 'var(--color-text-primary)' }}>
@@ -79,7 +79,7 @@ export default function NewEntryModal({ adventureId, authorId, diaryType, initia
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
+        <form onSubmit={handleSubmit} className="modal-body space-y-4 px-6 py-5">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="w-full sm:w-36 sm:shrink-0">
               <label className="mb-1.5 block text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>Data</label>

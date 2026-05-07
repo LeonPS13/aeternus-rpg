@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono, Jacquard_12 } from 'next/font/google'
+import { Geist, Geist_Mono, Jacquard_12, Jersey_10, Teko } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider } from '@/context/theme'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -18,6 +19,18 @@ const jacquard12 = Jacquard_12({
   subsets: ['latin'],
 })
 
+const jersey10 = Jersey_10({
+  variable: '--font-jersey',
+  weight: '400',
+  subsets: ['latin'],
+})
+
+const teko = Teko({
+  variable: '--font-teko',
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+})
+
 export const metadata: Metadata = {
   title: 'Aeternus RPG',
   description: 'Ferramentas profissionais para mesas de RPG',
@@ -31,9 +44,9 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} ${jacquard12.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${jacquard12.variable} ${jersey10.variable} ${teko.variable} h-full antialiased`}
     >
-      <body className="h-full">{children}</body>
+      <body className="h-full"><ThemeProvider>{children}</ThemeProvider></body>
     </html>
   )
 }

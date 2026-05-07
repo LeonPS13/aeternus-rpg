@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
-import type { Character, CharacterAttack, InventoryItem } from '@/types/character'
+import type { Character, CharacterAttack, InventoryItem, AttackStat } from '@/types/character'
 import type { CodexEntry } from '@/types/codex'
 import { getWeaponEntries, translateSubtype, translateDamageType } from '@/lib/codex'
 import { mod, profBonus, fmtMod } from '@/lib/character-calc'
@@ -86,22 +86,31 @@ export default function WeaponPickerModal({ char, onConfirm, onClose }: Props) {
 
   function handleConfirm() {
     if (!selected) return
-    const dmgType     = translateDamageType(selected.data.damage_type as string)
-    const attackBonus = calcAttackBonus(selected, char, proficient, magicBonus, finesseAttr)
+    const dmgType    = translateDamageType(selected.data.damage_type as string)
+    const atkBonus   = calcAttackBonus(selected, char, proficient, magicBonus, finesseAttr)
+    const isRanged   = selected.subtype?.includes('ranged') ?? false
+    const stat: AttackStat = isRanged ? 'dex' : hasFinesse ? finesseAttr : 'str'
+    const mb         = magicBonus !== 0 ? magicBonus : undefined
 
     const attacks: CharacterAttack[] = isVersatile
       ? [
           {
             id: crypto.randomUUID(),
             name: `${selected.name} (1 mão)`,
-            attackBonus,
+            attackBonus: atkBonus,
+            stat,
+            damageDice: selected.data.damage as string,
+            magicBonus: mb,
             damage: calcDamageStr(selected, char, magicBonus, false, finesseAttr),
             damageType: dmgType,
           },
           {
             id: crypto.randomUUID(),
             name: `${selected.name} (2 mãos)`,
-            attackBonus,
+            attackBonus: atkBonus,
+            stat,
+            damageDice: selected.data.versatile_damage as string,
+            magicBonus: mb,
             damage: calcDamageStr(selected, char, magicBonus, true, finesseAttr),
             damageType: dmgType,
           },
@@ -110,7 +119,10 @@ export default function WeaponPickerModal({ char, onConfirm, onClose }: Props) {
           {
             id: crypto.randomUUID(),
             name: selected.name,
-            attackBonus,
+            attackBonus: atkBonus,
+            stat,
+            damageDice: selected.data.damage as string,
+            magicBonus: mb,
             damage: calcDamageStr(selected, char, magicBonus, false, finesseAttr),
             damageType: dmgType,
           },

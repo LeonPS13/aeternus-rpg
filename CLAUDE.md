@@ -49,10 +49,14 @@ app/
     master-shield/page.tsx
     codex/page.tsx
 
+context/
+  theme.tsx                    ThemeProvider + useTheme() hook
+
 components/
   layout/
     AppLayout.tsx              Sidebar + main com ambient glow
     Sidebar.tsx                Nav lateral com logo "Æternus / RPG" e ferramentas
+    ThemePickerModal.tsx       Modal de seleção de tema visual (3 temas)
 
   tools/
     DiceRoller/                Rolador de dados completo
@@ -88,6 +92,7 @@ lib/
   character-calc.ts            Cálculos D&D 5e SRD: mod(), profBonus(), calcAC(), calcInitiative(), calcSkillValue(), etc.
   codex.ts                     getCodexEntries, getRuleEntries (async), translateSubtype, translateDamageType, translateProperty
   master-shield.ts             loadShield(), saveShield() — localStorage com chave aeternus_shield_{playerId}
+  themes.ts                    THEMES[], applyTheme(), loadSavedTheme(), saveTheme() — localStorage aeternus_theme
 
 types/
   dice.ts                      DieType, DiceConfig, RollRecord
@@ -95,6 +100,7 @@ types/
   character.ts                 Character, CharacterAttack, InventoryItem, Skills, CLASSES, RACES, ALIGNMENTS
   codex.ts                     CodexType, CodexEntry
   master-shield.ts             ShieldCard (union: note|rule|null), ShieldData
+  theme.ts                     Theme { id, name, cssClass }
 
 supabase/
   codex_seed.sql               DDL + seed de armas, armaduras e itens SRD (~127 entradas)
@@ -147,6 +153,22 @@ RLS habilitado com políticas abertas (MVP sem autenticação).
 
 ---
 
+## Sistema de Temas
+
+Três temas visuais selecionáveis via `ThemePickerModal` no sidebar. O tema ativo é persistido em `localStorage['aeternus_theme']` e aplicado como classe CSS no `<html>`:
+
+| Tema | ID | Classe CSS |
+|---|---|---|
+| Grimório Arcano | `grimoire-arcane` | `.theme-grimoire` (padrão) |
+| Futuro Cibernético | `cyber-future` | `.theme-cyber` |
+| Acidente Nuclear | `nuclear-accident` | `.theme-nuclear` |
+
+`ThemeProvider` (em `context/theme.tsx`) envolve o app em `app/layout.tsx`. Usar `useTheme()` para ler/setar o tema ativo.
+
+Cada tema redefine as mesmas CSS custom properties em `app/globals.css`. Classes globais (`.arcane-panel`, `.arcane-btn`, etc.) mudam de aparência automaticamente via variáveis.
+
+---
+
 ## Identidade Visual — Grimório Arcano
 
 Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar classes Tailwind de cor** — usar `style={{ color: 'var(--color-*)' }}`.
@@ -170,11 +192,16 @@ Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar clas
 - `.arcane-panel` — card com ornamentos de canto dourados
 - `.arcane-btn` — botão com clip-path octogonal e gradiente vermelho
 - `.ornament-divider` — divisor com linhas e diamante dourado
-- `.section-label` — label de seção em 18px, letra dourada
+- `.section-label` — label de seção, letra dourada
 
 **Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 22px }` desktop / `18px` mobile (`@media (max-width: 767px)`) — escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
 
 **Logo sidebar:** "Æternus" / "RPG" em texto, `text-4xl tracking-widest`, sem imagem.
+
+**Overrides por tema em `globals.css`:**
+- `.theme-grimoire aside .text-base { font-size: 0.875rem }` — Jacquard 12 é larga, evita quebra de linha nos labels de nav
+- `.theme-nuclear .result-chip { pt: 0.4rem; pb: 0.1rem }` — Teko senta alto no em box, corrige alinhamento visual dos números
+- `.theme-nuclear .section-label` — fonte menor com `letter-spacing: 3px` e estilo terminal militar
 
 ---
 

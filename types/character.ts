@@ -37,12 +37,17 @@ export function defaultSkills(): Skills {
   ) as Skills
 }
 
+export type AttackStat = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
+
 export interface CharacterAttack {
   id: string
   name: string
   attackBonus: string
   damage: string
   damageType: string
+  stat?: AttackStat
+  damageDice?: string   // base dice without modifier (e.g. "1d8"); when set + stat set, modifier is computed live
+  magicBonus?: number   // magic weapon bonus applied to both attack and damage
 }
 
 export interface InventoryItem {

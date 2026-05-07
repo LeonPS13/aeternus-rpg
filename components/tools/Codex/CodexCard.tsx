@@ -1,13 +1,19 @@
 'use client'
 
-import {
-  Sword, Shield, Package,
-  Target, Flame, Droplets, FlaskConical, ScrollText,
-  Sparkles, Briefcase, Archive, Hammer, Crosshair,
-  AlertTriangle, Zap, Layers, Moon, Skull, Swords, BookOpen,
-} from 'lucide-react'
 import type { CodexEntry } from '@/types/codex'
 import { translateSubtype, translateDamageType } from '@/lib/codex'
+
+function RpgIcon({ file, size = 26 }: { file: string; size?: number }) {
+  return (
+    <img
+      src={`/icons_2/${file}`}
+      width={size}
+      height={size}
+      alt=""
+      style={{ objectFit: 'contain', filter: 'invert(1)' }}
+    />
+  )
+}
 
 interface Props {
   entry: CodexEntry
@@ -35,34 +41,34 @@ function getPrimaryStat(entry: CodexEntry): string {
 function getIcon(type: string, subtype: string | null) {
   if (type === 'weapon') {
     return subtype === 'simple ranged' || subtype === 'martial ranged'
-      ? <Crosshair size={13} />
-      : <Sword size={13} />
+      ? <RpgIcon file="seta.png" />
+      : <RpgIcon file="espada.png" />
   }
-  if (type === 'armor') return <Shield size={13} />
+  if (type === 'armor') return <RpgIcon file="armaduras.png" />
   if (type === 'rule') {
     switch (subtype) {
-      case 'condition':     return <AlertTriangle size={13} />
-      case 'action':        return <Zap size={13} />
-      case 'cover':         return <Layers size={13} />
-      case 'concentration': return <Sparkles size={13} />
-      case 'rest':          return <Moon size={13} />
-      case 'death':         return <Skull size={13} />
-      case 'combat':        return <Swords size={13} />
-      case 'reaction':      return <Zap size={13} />
-      default:              return <BookOpen size={13} />
+      case 'condition':     return <RpgIcon file="chave.png" />
+      case 'action':        return <RpgIcon file="capacete-viking.png" />
+      case 'cover':         return <RpgIcon file="escudo.png" />
+      case 'concentration': return <RpgIcon file="varinha-magica.png" />
+      case 'rest':          return <RpgIcon file="portao.png" />
+      case 'death':         return <RpgIcon file="curar.png" />
+      case 'combat':        return <RpgIcon file="lanca.png" />
+      case 'reaction':      return <RpgIcon file="seta.png" />
+      default:              return <RpgIcon file="livro-magico.png" />
     }
   }
   switch (subtype) {
-    case 'ammunition':   return <Target size={13} />
-    case 'light source': return <Flame size={13} />
-    case 'consumable':   return <Droplets size={13} />
-    case 'potion':       return <FlaskConical size={13} />
-    case 'scroll':       return <ScrollText size={13} />
-    case 'focus':        return <Sparkles size={13} />
-    case 'kit':          return <Briefcase size={13} />
-    case 'container':    return <Archive size={13} />
-    case 'gear':         return <Hammer size={13} />
-    default:             return <Package size={13} />
+    case 'ammunition':   return <RpgIcon file="seta.png" />
+    case 'light source': return <RpgIcon file="meteoro.png" />
+    case 'consumable':   return <RpgIcon file="garrafa.png" />
+    case 'potion':       return <RpgIcon file="pocao.png" />
+    case 'scroll':       return <RpgIcon file="livro-magico.png" />
+    case 'focus':        return <RpgIcon file="bola-de-cristal.png" />
+    case 'kit':          return <RpgIcon file="bau.png" />
+    case 'container':    return <RpgIcon file="bau.png" />
+    case 'gear':         return <RpgIcon file="mochila.png" />
+    default:             return <RpgIcon file="mochila.png" />
   }
 }
 
@@ -107,13 +113,13 @@ export default function CodexCard({ entry, onClick }: Props) {
           </div>
 
           {stat && (
-            <p className="mt-0.5 text-base" style={{ color: 'var(--color-gold)' }}>
+            <p className="text-base leading-none" style={{ color: 'var(--color-gold)' }}>
               {stat}
             </p>
           )}
 
           {entry.description && (
-            <p className="mt-1 line-clamp-2 text-sm leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="line-clamp-2 text-sm leading-snug" style={{ color: 'var(--color-text-muted)' }}>
               {entry.description}
             </p>
           )}

@@ -1,38 +1,51 @@
-import {
-  BookOpen, Crown, Shield, Map, Compass, Flame, Star, Eye,
-  Gem, Zap, Moon, Key, Trophy, Skull, Swords, Wand2, ScrollText, Castle,
-} from 'lucide-react'
 import type { ComponentType } from 'react'
 
-interface LucideIconProps {
+interface RpgIconProps {
   size?: number
   className?: string
   style?: React.CSSProperties
 }
 
-export const ADVENTURE_ICONS: { id: string; component: ComponentType<LucideIconProps> }[] = [
-  { id: 'BookOpen',   component: BookOpen   },
-  { id: 'Crown',      component: Crown      },
-  { id: 'Shield',     component: Shield     },
-  { id: 'Map',        component: Map        },
-  { id: 'Compass',    component: Compass    },
-  { id: 'Flame',      component: Flame      },
-  { id: 'Star',       component: Star       },
-  { id: 'Eye',        component: Eye        },
-  { id: 'Gem',        component: Gem        },
-  { id: 'Zap',        component: Zap        },
-  { id: 'Moon',       component: Moon       },
-  { id: 'Key',        component: Key        },
-  { id: 'Trophy',     component: Trophy     },
-  { id: 'Skull',      component: Skull      },
-  { id: 'Swords',     component: Swords     },
-  { id: 'Wand2',      component: Wand2      },
-  { id: 'ScrollText', component: ScrollText },
-  { id: 'Castle',     component: Castle     },
+function makeRpgIcon(file: string): ComponentType<RpgIconProps> {
+  function RpgIcon({ size = 16, style }: RpgIconProps) {
+    const px = Math.round(size * 1.75)
+    return (
+      <img
+        src={`/icons_2/${file}`}
+        width={px}
+        height={px}
+        alt=""
+        style={{ objectFit: 'contain', filter: 'invert(1)', ...style }}
+      />
+    )
+  }
+  RpgIcon.displayName = file.replace('.png', '')
+  return RpgIcon
+}
+
+export const ADVENTURE_ICONS: { id: string; component: ComponentType<RpgIconProps> }[] = [
+  { id: 'BookOpen',   component: makeRpgIcon('livro-magico.png')    },
+  { id: 'Crown',      component: makeRpgIcon('capacete-viking.png') },
+  { id: 'Shield',     component: makeRpgIcon('escudo.png')          },
+  { id: 'Map',        component: makeRpgIcon('mapa.png')            },
+  { id: 'Compass',    component: makeRpgIcon('binocular.png')       },
+  { id: 'Flame',      component: makeRpgIcon('meteoro.png')         },
+  { id: 'Star',       component: makeRpgIcon('diamante.png')        },
+  { id: 'Eye',        component: makeRpgIcon('bola-de-cristal.png') },
+  { id: 'Gem',        component: makeRpgIcon('perola.png')          },
+  { id: 'Zap',        component: makeRpgIcon('varinha-magica.png')  },
+  { id: 'Moon',       component: makeRpgIcon('curar.png')           },
+  { id: 'Key',        component: makeRpgIcon('chave.png')           },
+  { id: 'Trophy',     component: makeRpgIcon('dinheiro.png')        },
+  { id: 'Skull',      component: makeRpgIcon('machado.png')         },
+  { id: 'Swords',     component: makeRpgIcon('espada.png')          },
+  { id: 'Wand2',      component: makeRpgIcon('chapeu-de-mago.png')  },
+  { id: 'ScrollText', component: makeRpgIcon('mochila.png')         },
+  { id: 'Castle',     component: makeRpgIcon('portao.png')          },
 ]
 
-export function getAdventureIcon(id?: string): ComponentType<LucideIconProps> {
-  return ADVENTURE_ICONS.find((i) => i.id === id)?.component ?? BookOpen
+export function getAdventureIcon(id?: string): ComponentType<RpgIconProps> {
+  return ADVENTURE_ICONS.find((i) => i.id === id)?.component ?? makeRpgIcon('livro-magico.png')
 }
 
 interface IconPickerProps {
@@ -54,11 +67,9 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             style={selected ? {
               background: 'var(--color-gold-glow)',
               border: '1px solid var(--color-gold)',
-              color: 'var(--color-gold)',
             } : {
               background: 'var(--color-bg-tertiary)',
               border: '1px solid var(--color-border-default)',
-              color: 'var(--color-text-muted)',
             }}
           >
             <Icon size={14} />

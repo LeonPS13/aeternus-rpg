@@ -1,24 +1,42 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Dice6, User, Map, Table2, BookOpen, X, Library, Shield } from 'lucide-react'
+import { X } from 'lucide-react'
+import ThemePickerModal from '@/components/layout/ThemePickerModal'
+
+function NavIcon({ file, active }: { file: string; active: boolean }) {
+  return (
+    <img
+      src={`/icons_2/${file}`}
+      width={28}
+      height={28}
+      alt=""
+      style={{
+        objectFit: 'contain',
+        filter: active ? 'var(--nav-icon-filter-active)' : 'var(--nav-icon-filter-inactive)',
+        flexShrink: 0,
+      }}
+    />
+  )
+}
 
 interface ToolItem {
   label: string
   href: string
-  icon: React.ReactNode
+  iconFile: string
   active: boolean
 }
 
 const tools: ToolItem[] = [
-  { label: 'Rolador de Dados',      href: '/tools/dice-roller',         icon: <Dice6 size={16} />,    active: true  },
-  { label: 'Diário de Aventura',    href: '/tools/adventure-diary',     icon: <BookOpen size={16} />, active: true  },
-  { label: 'Ficha de Personagem',   href: '/tools/character-sheet',     icon: <User size={16} />,     active: true  },
-  { label: 'Escudo do Mestre',      href: '/tools/master-shield',       icon: <Shield size={16} />,   active: true  },
-  { label: 'Codex',                 href: '/tools/codex',               icon: <Library size={16} />,  active: true  },
-  { label: 'Tabelas de Encontro',   href: '/tools/encounter-tables',    icon: <Table2 size={16} />,   active: false },
-  { label: 'Mapa de Masmorra',      href: '/tools/dungeon-map',         icon: <Map size={16} />,      active: false },
+  { label: 'Rolador de Dados',      href: '/tools/dice-roller',      iconFile: 'meteoro.png',         active: true  },
+  { label: 'Diário de Aventura',    href: '/tools/adventure-diary',  iconFile: 'livro-magico.png',    active: true  },
+  { label: 'Ficha de Personagem',   href: '/tools/character-sheet',  iconFile: 'chapeu-de-mago.png',  active: true  },
+  { label: 'Escudo do Mestre',      href: '/tools/master-shield',    iconFile: 'escudo.png',          active: true  },
+  { label: 'Codex',                 href: '/tools/codex',            iconFile: 'bola-de-cristal.png', active: true  },
+  { label: 'Tabelas de Encontro',   href: '/tools/encounter-tables', iconFile: 'binocular.png',       active: false },
+  { label: 'Mapa de Masmorra',      href: '/tools/dungeon-map',      iconFile: 'mapa.png',            active: false },
 ]
 
 interface SidebarProps {
@@ -28,6 +46,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
+  const [themeOpen, setThemeOpen] = useState(false)
 
   return (
     <aside
@@ -39,7 +58,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       ].join(' ')}
       style={{ background: 'var(--color-bg-secondary)', borderRight: '1px solid var(--color-border-default)' }}>
 
-      {/* Logo text */}
+      {/* Logo — clicável para trocar tema */}
       <div className="flex flex-col items-center justify-center py-3"
         style={{ borderBottom: '1px solid var(--color-border-default)' }}>
         <div className="relative w-full text-center" style={{ lineHeight: 1.1 }}>
@@ -52,14 +71,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           >
             <X size={16} />
           </button>
-          <p className="text-4xl tracking-widest"
-            style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px rgba(201,168,76,0.6)' }}>
-            Æternus
-          </p>
-          <p className="text-4xl tracking-widest"
-            style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px rgba(201,168,76,0.6)' }}>
-            RPG
-          </p>
+          <button
+            onClick={() => setThemeOpen(true)}
+            className="inline-block transition-opacity hover:opacity-75"
+            style={{ lineHeight: 1.1 }}
+            title="Trocar tema"
+          >
+            <p className="text-4xl tracking-widest"
+              style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px var(--color-logo-glow)' }}>
+              Æternus
+            </p>
+            <p className="text-4xl tracking-widest"
+              style={{ color: 'var(--color-gold-light)', textShadow: '0 0 24px var(--color-logo-glow)' }}>
+              RPG
+            </p>
+          </button>
         </div>
       </div>
 
@@ -73,7 +99,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               return (
                 <li key={tool.href}>
                   <span className="flex cursor-not-allowed items-center gap-3 border-l-2 border-transparent px-3 py-2.5 opacity-25">
-                    <span style={{ color: 'var(--color-text-muted)' }}>{tool.icon}</span>
+                    <NavIcon file={tool.iconFile} active={false} />
                     <span className="flex-1 text-base" style={{ color: 'var(--color-text-muted)' }}>{tool.label}</span>
                     <span className="rounded-sm px-1.5 py-0.5 text-xs font-medium"
                       style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
@@ -98,9 +124,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     color: 'var(--color-text-secondary)',
                   }}
                 >
-                  <span style={isActive ? { color: 'var(--color-gold)' } : { color: 'var(--color-text-muted)' }}>
-                    {tool.icon}
-                  </span>
+                  <NavIcon file={tool.iconFile} active={isActive} />
                   <span className="flex-1 text-base font-medium">{tool.label}</span>
                 </Link>
               </li>
@@ -113,6 +137,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className="px-5 py-3" style={{ borderTop: '1px solid var(--color-border-default)' }}>
         <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>v0.1.0 — Alpha</p>
       </div>
+
+      {themeOpen && <ThemePickerModal onClose={() => setThemeOpen(false)} />}
     </aside>
   )
 }

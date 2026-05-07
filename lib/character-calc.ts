@@ -1,4 +1,4 @@
-import type { Character, SkillName } from '@/types/character'
+import type { Character, SkillName, AttackStat } from '@/types/character'
 
 export const ATTR_DEFS = [
   { key: 'strScore' as const, abbr: 'FOR', label: 'Força' },
@@ -93,4 +93,13 @@ export function calcSkillValue(c: Character, skill: SkillName): number {
 
 export function calcSaveValue(c: Character, scoreKey: AttrKey, profKey: keyof Character): number {
   return mod(c[scoreKey] as number) + (c[profKey] ? profBonus(c.level) : 0)
+}
+
+export const STAT_TO_ATTR: Record<AttackStat, AttrKey> = {
+  str: 'strScore', dex: 'dexScore', con: 'conScore',
+  int: 'intScore', wis: 'wisScore', cha: 'chaScore',
+}
+
+export function calcAttackBonus(c: Character, stat: AttackStat): string {
+  return fmtMod(mod(c[STAT_TO_ATTR[stat]] as number) + profBonus(c.level))
 }
