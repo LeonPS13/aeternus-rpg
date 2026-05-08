@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import type { CodexEntry } from '@/types/codex'
 
 function fromRow(r: any): CodexEntry {
@@ -17,7 +17,7 @@ function fromRow(r: any): CodexEntry {
 }
 
 export async function getCodexEntries(): Promise<CodexEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('codex')
     .select('*')
     .order('type')
@@ -27,7 +27,7 @@ export async function getCodexEntries(): Promise<CodexEntry[]> {
 }
 
 export async function getWeaponEntries(): Promise<CodexEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('codex')
     .select('*')
     .eq('type', 'weapon')
@@ -38,7 +38,7 @@ export async function getWeaponEntries(): Promise<CodexEntry[]> {
 }
 
 export async function getArmorEntries(): Promise<CodexEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('codex')
     .select('*')
     .eq('type', 'armor')
@@ -49,7 +49,7 @@ export async function getArmorEntries(): Promise<CodexEntry[]> {
 }
 
 export async function getItemEntries(): Promise<CodexEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('codex')
     .select('*')
     .eq('type', 'item')
@@ -60,7 +60,7 @@ export async function getItemEntries(): Promise<CodexEntry[]> {
 }
 
 export async function getRuleEntries(): Promise<CodexEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('codex')
     .select('*')
     .eq('type', 'rule')

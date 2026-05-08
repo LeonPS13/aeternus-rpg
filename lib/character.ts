@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import type { Character } from '@/types/character'
 import { defaultSkills } from '@/types/character'
 
@@ -67,7 +67,7 @@ export function createEmptyCharacter(playerId: string): Character {
 }
 
 export async function getCharacters(playerId: string): Promise<Character[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('characters')
     .select('*')
     .eq('player_id', playerId)
@@ -77,9 +77,9 @@ export async function getCharacters(playerId: string): Promise<Character[]> {
 }
 
 export async function saveCharacter(character: Character): Promise<void> {
-  await supabase.from('characters').upsert(toRow(character))
+  await getSupabase().from('characters').upsert(toRow(character))
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
-  await supabase.from('characters').delete().eq('id', id)
+  await getSupabase().from('characters').delete().eq('id', id)
 }

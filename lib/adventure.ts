@@ -1,5 +1,30 @@
-import { supabase } from './supabase'
+import { getSupabase } from './supabase'
 import type { Adventure, DiaryEntry } from '@/types/adventure'
+
+type AdventureRow = {
+  id: string
+  name: string
+  master_id: string
+  created_at: string
+  icon: string | null
+}
+
+type MembershipRow = {
+  adventures: AdventureRow | null
+}
+
+type DiaryEntryRow = {
+  id: string
+  adventure_id: string
+  date: string
+  title: string
+  summary: string
+  tags: string[] | null
+  author_id: string
+  diary_type: 'adventure' | 'personal'
+  created_at: string
+  updated_at: string
+}
 
 const PLAYER_KEY = 'aeternus_player_id'
 
@@ -20,17 +45,17 @@ export function getPlayerId(): string {
 }
 
 export async function getAdventures(playerId: string): Promise<Adventure[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('adventure_memberships')
     .select('adventures(id, name, master_id, created_at, icon)')
     .eq('player_id', playerId)
 
   if (error || !data) return []
 
-  return data
-    .map((m: any) => m.adventures)
-    .filter(Boolean)
-    .map((a: any) => ({
+  return (data as unknown as MembershipRow[])
+    .map((m) => m.adventures)
+    .filter((a): a is AdventureRow => a !== null)
+    .map((a) => ({
       id: a.id,
       name: a.name,
       masterId: a.master_id,
@@ -40,7 +65,7 @@ export async function getAdventures(playerId: string): Promise<Adventure[]> {
 }
 
 export async function findAdventure(id: string): Promise<Adventure | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('adventures')
     .select('id, name, master_id, created_at, icon')
     .eq('id', id)
@@ -58,7 +83,7 @@ export async function findAdventure(id: string): Promise<Adventure | null> {
 }
 
 export async function saveAdventure(adventure: Adventure, playerId: string): Promise<void> {
-  const { error } = await supabase.from('adventures').upsert({
+  const { error } = await getSupabase().from('adventures').upsert({
     id: adventure.id,
     name: adventure.name,
     master_id: adventure.masterId,
@@ -67,7 +92,7 @@ export async function saveAdventure(adventure: Adventure, playerId: string): Pro
   })
 
   if (error) {
-    await supabase.from('adventures').upsert({
+    await getSupabase().from('adventures').upsert({
       id: adventure.id,
       name: adventure.name,
       master_id: adventure.masterId,
@@ -75,14 +100,14 @@ export async function saveAdventure(adventure: Adventure, playerId: string): Pro
     })
   }
 
-  await supabase.from('adventure_memberships').upsert({
+  await getSupabase().from('adventure_memberships').upsert({
     adventure_id: adventure.id,
     player_id: playerId,
   })
 }
 
 export async function getEntries(adventureId: string): Promise<DiaryEntry[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('diary_entries')
     .select('*')
     .eq('adventure_id', adventureId)
@@ -90,7 +115,7 @@ export async function getEntries(adventureId: string): Promise<DiaryEntry[]> {
 
   if (error || !data) return []
 
-  return data.map((e: any) => ({
+  return data.map((e: DiaryEntryRow) => ({
     id: e.id,
     adventureId: e.adventure_id,
     date: e.date,
@@ -105,7 +130,7 @@ export async function getEntries(adventureId: string): Promise<DiaryEntry[]> {
 }
 
 export async function saveEntry(entry: DiaryEntry): Promise<void> {
-  await supabase.from('diary_entries').upsert({
+  await getSupabase().from('diary_entries').upsert({
     id: entry.id,
     adventure_id: entry.adventureId,
     date: entry.date,
@@ -120,22 +145,22 @@ export async function saveEntry(entry: DiaryEntry): Promise<void> {
 }
 
 export async function updateAdventure(id: string, name: string, icon: string): Promise<void> {
-  const { error } = await supabase.from('adventures').update({ name, icon }).eq('id', id)
+  const { error } = await getSupabase().from('adventures').update({ name, icon }).eq('id', id)
   if (error) {
-    await supabase.from('adventures').update({ name }).eq('id', id)
+    await getSupabase().from('adventures').update({ name }).eq('id', id)
   }
 }
 
 export async function deleteEntry(id: string): Promise<void> {
-  await supabase.from('diary_entries').delete().eq('id', id)
+  await getSupabase().from('diary_entries').delete().eq('id', id)
 }
 
 export async function deleteAdventure(adventureId: string): Promise<void> {
-  await supabase.from('adventures').delete().eq('id', adventureId)
+  await getSupabase().from('adventures').delete().eq('id', adventureId)
 }
 
 export async function leaveAdventure(adventureId: string, playerId: string): Promise<void> {
-  await supabase
+  await getSupabase()
     .from('adventure_memberships')
     .delete()
     .eq('adventure_id', adventureId)

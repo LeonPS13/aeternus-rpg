@@ -56,15 +56,25 @@ function buildGroups(entries: CodexEntry[], typeFilter: TypeFilter, hasSearch: b
   return groups
 }
 
+let _cache: CodexEntry[] | null = null
+
 export default function Codex() {
   const [entries, setEntries]     = useState<CodexEntry[]>([])
   const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState<string | null>(null)
   const [search, setSearch]       = useState('')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [selected, setSelected]   = useState<CodexEntry | null>(null)
 
   useEffect(() => {
-    getCodexEntries().then(data => { setEntries(data); setLoading(false) })
+    if (_cache) {
+      setEntries(_cache)
+      setLoading(false)
+      return
+    }
+    getCodexEntries()
+      .then(data => { _cache = data; setEntries(data); setLoading(false) })
+      .catch(() => { setError('Erro ao carregar o Codex. Tente recarregar a página.'); setLoading(false) })
   }, [])
 
   const filtered = useMemo(() => {
@@ -161,6 +171,10 @@ export default function Codex() {
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Carregando Codex…</p>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-sm" style={{ color: 'var(--color-accent)' }}>{error}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded border border-dashed py-16 text-center"

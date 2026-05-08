@@ -27,7 +27,7 @@ const jersey10 = Jersey_10({
 
 const teko = Teko({
   variable: '--font-teko',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
 })
 

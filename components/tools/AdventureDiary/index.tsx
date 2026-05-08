@@ -31,10 +31,8 @@ export default function AdventureDiary() {
     }
   }, [selectedId])
 
-  async function handleSelect(id: string) {
+  function handleSelect(id: string) {
     setSelectedId(id)
-    const data = await getEntries(id)
-    setEntries(data)
   }
 
   async function handleSaveEntry(entry: DiaryEntry) {

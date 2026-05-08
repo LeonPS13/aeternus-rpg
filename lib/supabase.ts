@@ -11,12 +11,3 @@ export function getSupabase(): SupabaseClient {
   }
   return _client
 }
-
-// Keep named export for backwards compatibility with lib/adventure.ts
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    const client = getSupabase()
-    const value = (client as any)[prop]
-    return typeof value === 'function' ? value.bind(client) : value
-  },
-})

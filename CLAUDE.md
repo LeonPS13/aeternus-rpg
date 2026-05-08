@@ -9,343 +9,83 @@ SaaS de ferramentas para RPG de mesa. Stack: Next.js 16.2.4 (App Router), React 
 ## Comandos
 
 ```powershell
-# Dev server (PowerShell)
 $env:PATH = "C:\Program Files\nodejs;$env:PATH"; npm.cmd run dev
-
-# Ou simplesmente abrir o start-dev.bat na raiz do projeto
-
-# Build
 $env:PATH = "C:\Program Files\nodejs;$env:PATH"; npm.cmd run build
 ```
 
-> npm/npx no PowerShell exige chamar `npm.cmd` e setar o PATH manualmente — executar `.ps1` está bloqueado pela execution policy.
+> PowerShell exige `npm.cmd` + PATH manual — `.ps1` bloqueado pela execution policy.
 
 ---
 
 ## Tailwind v4
 
-Sem `tailwind.config.js`. Configuração em `app/globals.css`:
+Sem `tailwind.config.js`. Config em `app/globals.css` (`@import "tailwindcss"`). Animações customizadas: `fade-up`, `roll-spin`, `result-pop`, `slot-tick`.
 
-```css
-@import "tailwindcss";
-@custom-variant dark (&:is(.dark *));
-@theme inline { ... }
-```
-
-Animações customizadas definidas em `globals.css` via `@keyframes`: `fade-up`, `roll-spin`, `result-pop`, `slot-tick`.
+**Gotcha:** valores arbitrários com vírgulas (ex: `grid-cols-[minmax(0,1fr)_...]`) podem não ser gerados. Para layouts com `flex: 1 1 0%` / `min-width: 0` / `minmax`, use classes em `globals.css` com `@media` explícito.
 
 ---
 
-## Estrutura de arquivos
+## Identidade Visual
 
-```
-app/
-  globals.css                  Tailwind v4 + keyframes + noise texture + CSS vars
-  layout.tsx                   Root layout
-  tools/
-    dice-roller/page.tsx
-    adventure-diary/page.tsx
-    character-sheet/page.tsx
-    master-shield/page.tsx
-    codex/page.tsx
+**Nunca usar classes Tailwind de cor** — sempre `style={{ color: 'var(--color-*)' }}`.
 
-context/
-  theme.tsx                    ThemeProvider + useTheme() hook
+CSS custom properties definidas em `app/globals.css`. Variáveis: `--color-bg-primary/secondary/tertiary`, `--color-gold/gold-light/gold-dark/gold-glow`, `--color-accent`, `--color-text-primary/secondary/muted`, `--color-border-default`.
 
-components/
-  layout/
-    AppLayout.tsx              Sidebar + main com ambient glow
-    Sidebar.tsx                Nav lateral com logo "Æternus / RPG" e ferramentas
-    ThemePickerModal.tsx       Modal de seleção de tema visual (3 temas)
+**Classes CSS globais:** `.arcane-panel`, `.arcane-btn`, `.ornament-divider`, `.section-label`, `.attack-row`, `.attack-col` — definidas em `globals.css`, nunca recriar via Tailwind.
 
-  tools/
-    DiceRoller/                Rolador de dados completo
-    AdventureDiary/            Diário de aventura (Supabase)
-      adventureIcons.tsx       Lista de 18 ícones RPG + componente IconPicker
-      EditAdventureModal.tsx   Modal para editar nome e ícone da aventura
-    CharacterSheet/            Ficha de personagem D&D 5e SRD (Supabase)
-      index.tsx                Orquestrador — 4 modos: list / create / view / edit
-      CharacterList.tsx        Lista de fichas com confirmação de exclusão
-      WizardView.tsx           Criação passo a passo (5 etapas sequenciais)
-      CharacterView.tsx        Visão de leitura com edição rápida inline
-      SheetView.tsx            Edição completa com abas livres
-      sections/
-        IdentitySection.tsx
-        StatsSection.tsx
-        CombatSection.tsx
-        EquipmentSection.tsx
-        TraitsSection.tsx
-    Codex/                     Biblioteca SRD navegável (Supabase, somente leitura)
-      index.tsx                Orquestrador — filtro por tipo, busca, agrupamento por subtipo
-      CodexCard.tsx            Card de item/arma/armadura/regra com ícone por categoria
-      CodexDetail.tsx          Modal de detalhe com dados estruturados por tipo
-    MasterShield/              Escudo do Mestre (localStorage)
-      index.tsx                Orquestrador — 12 cards (notas ou regras do Codex)
-      ShieldGrid.tsx           Grid 2×6 mobile / 4×3 desktop; NoteCard + RuleCard sempre expandidos
-      RulePickerModal.tsx      Modal com abas Codex (busca+preview) e Personalizado (título+conteúdo)
-
-lib/
-  supabase.ts                  Client Supabase singleton (createClient)
-  dice.ts                      Lógica de rolagem (crypto.getRandomValues + rejection sampling)
-  adventure.ts                 CRUD Supabase para Adventure/DiaryEntry
-  character.ts                 CRUD Supabase para Character (getCharacters, saveCharacter, deleteCharacter, createEmptyCharacter)
-  character-calc.ts            Cálculos D&D 5e SRD: mod(), profBonus(), calcAC(), calcInitiative(), calcSkillValue(), etc.
-  codex.ts                     getCodexEntries, getRuleEntries (async), translateSubtype, translateDamageType, translateProperty
-  master-shield.ts             loadShield(), saveShield() — localStorage com chave aeternus_shield_{playerId}
-  themes.ts                    THEMES[], applyTheme(), loadSavedTheme(), saveTheme() — localStorage aeternus_theme
-
-types/
-  dice.ts                      DieType, DiceConfig, RollRecord
-  adventure.ts                 Adventure, DiaryEntry, ActiveTab
-  character.ts                 Character, CharacterAttack, InventoryItem, Skills, CLASSES, RACES, ALIGNMENTS
-  codex.ts                     CodexType, CodexEntry
-  master-shield.ts             ShieldCard (union: note|rule|null), ShieldData
-  theme.ts                     Theme { id, name, cssClass }
-
-supabase/
-  codex_seed.sql               DDL + seed de armas, armaduras e itens SRD (~127 entradas)
-  codex_rules_seed.sql         Seed de regras SRD: 15 condições, 13 ações de combate, 9 regras gerais
-
-.env.local                     NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY (não commitado)
-```
-
----
-
-## Supabase
-
-**Projeto:** `zgebucfjvvctunnpdijn` (conta separada, não conectada ao MCP do Claude)
-
-**Tabelas:**
-
-| Tabela | Descrição |
-|---|---|
-| `adventures` | id (text PK, 6 chars), name, master_id, created_at, icon (text, default 'BookOpen') |
-| `adventure_memberships` | adventure_id + player_id (PK composta) — controla quem tem acesso |
-| `diary_entries` | id (uuid), adventure_id, date, title, summary, tags[], author_id, diary_type, created_at, updated_at |
-| `codex` | id (uuid), name, type ('weapon'\|'armor'\|'item'\|'rule'\|'spell'\|'feature'), subtype, description, data (JSONB), source ('srd'\|'custom'), player_id (null = sistema), created_at, updated_at |
-
-**Migração pendente** (rodar no SQL Editor do Supabase se coluna `icon` ainda não existir):
-```sql
-ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'BookOpen';
-```
-
-O código já tem fallback resiliente: tenta upsert com `icon`, e se falhar (coluna inexistente) refaz sem o campo.
-
-RLS habilitado com políticas abertas (MVP sem autenticação).
-
-**Identidade do jogador:** UUID gerado na primeira visita, persistido em `localStorage['aeternus_player_id']`. Distingue mestre de jogador sem Supabase Auth.
-
-**Funções em `lib/adventure.ts`:**
-
-| Função | Descrição |
-|---|---|
-| `getPlayerId()` | sync — localStorage |
-| `generateAdventureId()` | sync — 6 chars, charset sem ambiguidade |
-| `getAdventures(playerId)` | async — via adventure_memberships JOIN |
-| `findAdventure(id)` | async — busca por código para entrar |
-| `saveAdventure(adv, playerId)` | async — upsert adventure + membership |
-| `deleteAdventure(adventureId)` | async — mestre exclui tudo (cascade) |
-| `leaveAdventure(adventureId, playerId)` | async — jogador remove só sua membership |
-| `getEntries(adventureId)` | async |
-| `updateAdventure(id, name, icon)` | async — edição de nome/ícone pelo mestre |
-| `saveEntry(entry)` | async — upsert por id |
-| `deleteEntry(id)` | async |
+**Tipografia:** Jacquard 12 via `next/font/google`, `font-sans`. `html { font-size: 22px }` desktop / `18px` mobile. Usar `leading-none` em chips/botões (ascender alto da fonte).
 
 ---
 
 ## Sistema de Temas
 
-Três temas visuais selecionáveis via `ThemePickerModal` no sidebar. O tema ativo é persistido em `localStorage['aeternus_theme']` e aplicado como classe CSS no `<html>`:
-
-| Tema | ID | Classe CSS |
-|---|---|---|
-| Grimório Arcano | `grimoire-arcane` | `.theme-grimoire` (padrão) |
-| Futuro Cibernético | `cyber-future` | `.theme-cyber` |
-| Acidente Nuclear | `nuclear-accident` | `.theme-nuclear` |
-
-`ThemeProvider` (em `context/theme.tsx`) envolve o app em `app/layout.tsx`. Usar `useTheme()` para ler/setar o tema ativo.
-
-Cada tema redefine as mesmas CSS custom properties em `app/globals.css`. Classes globais (`.arcane-panel`, `.arcane-btn`, etc.) mudam de aparência automaticamente via variáveis.
+3 temas aplicados como classe no `<html>`: `.theme-grimoire` (padrão), `.theme-cyber`, `.theme-nuclear`. Persistido em `localStorage['aeternus_theme']`. Usar `useTheme()` de `context/theme.tsx`.
 
 ---
 
-## Identidade Visual — Grimório Arcano
+## Supabase
 
-Todas as cores via CSS custom properties em `app/globals.css`. **Nunca usar classes Tailwind de cor** — usar `style={{ color: 'var(--color-*)' }}`.
+**Projeto:** `zgebucfjvvctunnpdijn` (não conectado ao MCP do Claude)
 
-| Variável | Valor | Uso |
-|---|---|---|
-| `--color-bg-primary` | `#181208` | Fundo da página |
-| `--color-bg-secondary` | `#261C0E` | Painéis, sidebar |
-| `--color-bg-tertiary` | `#322412` | Inputs, chips |
-| `--color-gold` | `#C9A84C` | Bordas ativas, ícones |
-| `--color-gold-light` | `#E8C96A` | Texto em destaque |
-| `--color-gold-dark` | `#8B6914` | Labels de seção |
-| `--color-gold-glow` | `rgba(201,168,76,0.15)` | Backgrounds sutis |
-| `--color-accent` | `#7B1E1E` | Botão primário (vermelho escuro) |
-| `--color-text-primary` | `#F0E6CC` | Texto principal |
-| `--color-text-secondary` | `#A89060` | Texto secundário |
-| `--color-text-muted` | `#6A5830` | Texto apagado, placeholders |
-| `--color-border-default` | `rgba(201,168,76,0.3)` | Bordas padrão |
+**Tabelas:** `adventures`, `adventure_memberships`, `diary_entries`, `characters`, `codex`
 
-**Classes CSS globais:**
-- `.arcane-panel` — card com ornamentos de canto dourados
-- `.arcane-btn` — botão com clip-path octogonal e gradiente vermelho
-- `.ornament-divider` — divisor com linhas e diamante dourado
-- `.section-label` — label de seção, letra dourada
-- `.attack-row` — flex row responsivo para linhas da tabela de ataques (`flex-col` mobile → `flex-row` sm+, gap `0.5rem`)
-- `.attack-col` — coluna de distribuição igual (`flex: 1 1 0%; min-width: 0`) dentro de `.attack-row`
+**Identidade do jogador:** UUID em `localStorage['aeternus_player_id']` — sem Supabase Auth.
 
-**Tipografia:** Jacquard 12 (medieval) via `next/font/google`. `html { font-size: 22px }` desktop / `18px` mobile (`@media (max-width: 767px)`) — escala todos os utilitários rem do Tailwind. `font-sans` → Jacquard 12. Usar `leading-none` em chips/botões para compensar métricas de ascender da fonte.
+RLS habilitado com políticas abertas (MVP). `lib/supabase.ts` exporta `getSupabase()` singleton.
 
-**Logo sidebar:** "Æternus" / "RPG" em texto, `text-4xl tracking-widest`, sem imagem.
-
-**Overrides por tema em `globals.css`:**
-- `.theme-grimoire aside .text-base { font-size: 0.875rem }` — Jacquard 12 é larga, evita quebra de linha nos labels de nav
-- `.theme-nuclear .result-chip { pt: 0.4rem; pb: 0.1rem }` — Teko senta alto no em box, corrige alinhamento visual dos números
-- `.theme-nuclear .section-label` — fonte menor com `letter-spacing: 3px` e estilo terminal militar
-
----
-
-## Ferramentas implementadas
-
-| Ferramenta | Rota | Componente principal |
-|---|---|---|
-| Rolador de Dados | `/tools/dice-roller` | `components/tools/DiceRoller/index.tsx` |
-| Diário de Aventura | `/tools/adventure-diary` | `components/tools/AdventureDiary/index.tsx` |
-| Ficha de Personagem | `/tools/character-sheet` | `components/tools/CharacterSheet/index.tsx` |
-| Escudo do Mestre | `/tools/master-shield` | `components/tools/MasterShield/index.tsx` |
-| Codex | `/tools/codex` | `components/tools/Codex/index.tsx` |
-
----
-
-## Codex — Biblioteca SRD
-
-Ferramenta de consulta somente leitura. Carrega todos os itens do Supabase de uma vez e filtra no cliente.
-
-**Tipos (`CodexType`):** `weapon`, `armor`, `item`, `rule`, `spell`, `feature`
-
-**Subtypes por tipo:**
-
-| Tipo | Subtypes |
-|---|---|
-| `weapon` | `simple melee`, `simple ranged`, `martial melee`, `martial ranged` |
-| `armor` | `light`, `medium`, `heavy`, `shield` |
-| `item` | `ammunition`, `light source`, `consumable`, `potion`, `scroll`, `focus`, `kit`, `container`, `gear` |
-| `rule` | `condition`, `action`, `cover`, `concentration`, `rest`, `death`, `combat`, `reaction` |
-
-**Estrutura do campo `data` (JSONB) por tipo:**
-
-- `weapon`: `{ damage, damage_type, properties[], range?, versatile_damage?, weight, cost }`
-- `armor`: `{ ac_base, max_dex_bonus, min_strength, stealth_disadvantage, weight, cost }` / shield: `{ ac_bonus, stealth_disadvantage, weight, cost }`
-- `item`: campos variáveis por subtipo (healing, damage, uses, capacity, etc.)
-- `rule/condition`: `{ effects: string[], original_name }` / exaustão: `{ levels: [{level, effect}], original_name }`
-- `rule/action`: `{ effects: string[], action_type, original_name }`
-- `rule/cover`: `{ degrees: [{name, bonus, examples}], original_name }`
-- `rule/rest`: `{ duration, effects: string[], original_name }`
-
-**Funções em `lib/codex.ts`:**
-
-| Função | Descrição |
-|---|---|
-| `getCodexEntries()` | async — busca tudo ordenado por type, name |
-| `getRuleEntries()` | async — busca só type='rule', ordenado por subtype, name (usado pelo Escudo do Mestre) |
-| `translateSubtype(sub)` | sync — inglês → português para badges e grupos |
-| `translateDamageType(dmg)` | sync — 'piercing' → 'perfurante', etc. |
-| `translateProperty(prop)` | sync — 'two-handed' → 'duas mãos', etc. |
-
-**Seeds SQL (rodar no SQL Editor do Supabase):**
-1. `supabase/codex_seed.sql` — cria tabela + seeds armas/armaduras/itens
-2. `supabase/codex_rules_seed.sql` — seeds de regras (rodar após o seed principal)
-
-### Padrão para nova ferramenta
-
-1. Criar `app/tools/[nome]/page.tsx` com metadata + `<AppLayout>`
-2. Criar `components/tools/[NomePascalCase]/index.tsx`
-3. Adicionar entrada em `components/layout/Sidebar.tsx` (array `tools`)
+Migração: `ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'BookOpen';` (já aplicada em prod; code tem fallback).
 
 ---
 
 ## Regras de código
 
-- Dados rolados com `crypto.getRandomValues()` + rejection sampling (sem `Math.random()`)
-- Sem comentários a menos que o WHY seja não-óbvio
-- `FormEvent` do React está deprecado no React 19 — usar `React.SyntheticEvent` inline sem importar
-- Todas as funções de lib/adventure.ts são async (exceto `getPlayerId` e `generateAdventureId`)
-- Mapeamento snake_case (DB) ↔ camelCase (TypeScript) feito nas funções de lib
-- Inputs numéricos usam padrão `NumInput`: estado local string + normalização no `onBlur` (permite apagar e redigitar sem travar em 0)
-- Auto-save da ficha: `isDirty` ref + `useEffect` debounce 1500ms; flush imediato no `onBack`
-- **Tailwind v4 — layouts complexos:** valores arbitrários com `()` e vírgulas (ex: `grid-cols-[minmax(0,1fr)_...]`) podem não ser gerados corretamente pelo parser. Para layouts responsivos que dependem de `flex: 1 1 0%` / `min-width: 0` / `minmax`, definir classes CSS diretamente em `globals.css` com `@media` queries explícitas em vez de classes Tailwind arbitrárias.
+- Dados: `crypto.getRandomValues()` + rejection sampling — nunca `Math.random()` para resultados reais
+- Sem comentários salvo WHY não-óbvio
+- `FormEvent` deprecado no React 19 — usar `React.SyntheticEvent` inline
+- snake_case (DB) ↔ camelCase (TS) feito nas funções de `lib/`
+- Inputs numéricos: estado local `string` + normalização no `onBlur` (padrão NumInput)
+- Auto-save da ficha: `isDirty` ref + debounce 1500ms; flush no `onBack`
+- EP (Electrum) existe no schema `characters` mas é ocultado da UI
 
 ---
 
-## Ficha de Personagem — Supabase
+## Quirks conhecidos
 
-**Tabela:** `characters`
-
-Campos relevantes: `id`, `player_id`, `character_name`, `class`, `level`, `race`, `background`, `alignment`, `xp`, atributos (`str_score`…`cha_score`), combate (`ac_*`, `speed`, `initiative_bonus`), HP (`max_hp`, `current_hp`, `temp_hp`, `hit_dice_spent`), saves (`save_*_proficient`), `skills` (JSONB), `attacks` (JSONB), moedas (`cp`, `sp`, `ep`, `gp`, `pp`), `inventory` (JSONB — `{id, name, quantity, weight, description?}`), traços (`personality_traits`, `ideals`, `bonds`, `flaws`, `features_traits`, `other_proficiencies`).
-
-> EP (Electrum) existe no schema mas é ocultado da UI — sem migração necessária.
-
-**Funções em `lib/character.ts`:**
-
-| Função | Descrição |
-|---|---|
-| `createEmptyCharacter(playerId)` | sync — retorna Character com defaults |
-| `getCharacters(playerId)` | async — lista por player_id, ordem updated_at desc |
-| `saveCharacter(character)` | async — upsert por id |
-| `deleteCharacter(id)` | async — delete por id |
-
-**Modos do orquestrador (`index.tsx`):**
-
-| Modo | Componente | Descrição |
-|---|---|---|
-| `list` | `CharacterList` | Biblioteca de fichas |
-| `create` | `WizardView` | 5 etapas sequenciais; save só na última |
-| `view` | `CharacterView` | Leitura com edição inline (HP, moedas, inventário, ataques) |
-| `edit` | `SheetView` | Abas livres, botão Salvar sempre visível |
-
-**`ArmorSelector.tsx`:** restaura a seleção do dropdown (armadura/escudo) a partir dos campos `acArmorType`/`acArmorEquipped`/`acShieldBonus` do personagem via `useEffect` disparado quando a lista de armaduras carrega do Codex. Sem isso, o dropdown volta a "Sem armadura" ao reabrir a ficha mesmo com o item salvo no inventário.
-
-**`CombatSection.tsx` — tabela de ataques:** usa classes CSS globais `.attack-row` / `.attack-col` definidas em `globals.css` (não Tailwind). O dropdown de atributo ("FOR▾") é um componente `StatDropdown` customizado (não `<select>` nativo) para controle preciso do layout.
+- **ArmorSelector:** restaura dropdown via `useEffect` quando armaduras carregam do Codex — sem isso volta a "Sem armadura" ao reabrir ficha
+- **CombatSection:** tabela de ataques usa `.attack-row`/`.attack-col` (globals.css) + `StatDropdown` customizado, não `<select>` nativo
+- **Codex:** cache module-level em `Codex/index.tsx` — não re-faz fetch ao navegar de volta
 
 ---
 
-## Escudo do Mestre — DM Screen interativo
+## Nova ferramenta
 
-Ferramenta client-only (sem Supabase). Persiste em `localStorage` com chave `aeternus_shield_{playerId}`.
-
-**Modelo de dados (`types/master-shield.ts`):**
-```typescript
-type ShieldCard =
-  | { type: 'note'; title: string; content: string }
-  | { type: 'rule'; codexId: string }
-  | null   // slot vazio
-
-interface ShieldData { cards: ShieldCard[] }  // length 12
-```
-
-**Layout:** grid `grid-cols-2 sm:grid-cols-4` — 6×2 mobile, 3×4 desktop.
-
-**Tipos de card:**
-- **Slot vazio:** borda tracejada com botão "+ Criar" centralizado
-- **NoteCard:** input de título (gold-light, `text-xl`) + textarea de conteúdo (`text-lg`, `rows={6}`); sempre expandido, sem colapso
-- **RuleCard:** nome em `text-xl`, badge de subtipo, descrição + efeitos/níveis/graus sempre visíveis; borda dourada fixa
-
-**Modal de criação (`RulePickerModal.tsx`):**
-- Aba **Codex**: busca por nome/subtipo, lista agrupada por `RULE_SUBTYPE_ORDER`, preview da regra selecionada
-- Aba **Personalizado**: input de título + textarea de conteúdo
-
-**Funções em `lib/master-shield.ts`:**
-
-| Função | Descrição |
-|---|---|
-| `loadShield()` | sync — lê localStorage, fallback para 12 slots nulos |
-| `saveShield(data)` | sync — serializa para localStorage |
+1. `app/tools/[nome]/page.tsx` com metadata + `<AppLayout>`
+2. `components/tools/[NomePascalCase]/index.tsx`
+3. Entrada em `components/layout/Sidebar.tsx` (array `tools`)
 
 ---
 
-## Ferramentas planejadas (ainda não implementadas)
+## Ferramentas planejadas
 
 - Tabelas de Encontro (`/tools/encounter-tables`)
 - Mapa de Masmorra (`/tools/dungeon-map`)
