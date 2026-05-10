@@ -119,4 +119,7 @@ export interface Character {
   ideals: string
   bonds: string
   flaws: string
+  // Section 10: Class system
+  subclassId: string | null
+  spellSlotsUsed: Record<string, number>
 }
