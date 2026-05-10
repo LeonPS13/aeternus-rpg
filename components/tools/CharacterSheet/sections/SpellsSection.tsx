@@ -188,7 +188,7 @@ export default function SpellsSection({ char, onChange }: Props) {
           <div className="space-y-4">
             {sortedGroups.map(([level, items]) => (
               <div key={level}>
-                <p className="mb-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                <p className="section-label mb-2">
                   {spellLevelLabel(level)}
                 </p>
                 <div className="space-y-1.5">
