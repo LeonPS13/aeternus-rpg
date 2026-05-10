@@ -8,6 +8,8 @@ import StatsSection from './sections/StatsSection'
 import CombatSection from './sections/CombatSection'
 import EquipmentSection from './sections/EquipmentSection'
 import TraitsSection from './sections/TraitsSection'
+import AbilitiesSection from './sections/AbilitiesSection'
+import SpellsSection from './sections/SpellsSection'
 
 const TABS = [
   { key: 'identity',   label: 'Identidade'  },
@@ -15,6 +17,8 @@ const TABS = [
   { key: 'combat',     label: 'Combate'     },
   { key: 'equipment',  label: 'Equipamento' },
   { key: 'traits',     label: 'Traços'      },
+  { key: 'abilities',  label: 'Habilidades' },
+  { key: 'spells',     label: 'Magias'      },
 ] as const
 type TabKey = (typeof TABS)[number]['key']
 
@@ -119,6 +123,8 @@ export default function SheetView({ char, onChange, onSave, onBack, onDelete }: 
       {activeTab === 'combat'     && <CombatSection    char={char} onChange={onChange} />}
       {activeTab === 'equipment'  && <EquipmentSection char={char} onChange={onChange} />}
       {activeTab === 'traits'     && <TraitsSection    char={char} onChange={onChange} />}
+      {activeTab === 'abilities'  && <AbilitiesSection char={char} />}
+      {activeTab === 'spells'     && <SpellsSection    char={char} onChange={onChange} />}
     </div>
   )
 }
