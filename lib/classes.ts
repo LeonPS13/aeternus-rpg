@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase'
-import type { ClassEntry, ClassLevel, ClassFeature, Subclass, SubclassFeature } from '@/types/class'
+import type { ClassEntry, ClassLevel, ClassFeature, SubclassFeature } from '@/types/class'
 
 type ClassRow = {
   id: string; name: string; name_en: string | null; description: string | null
@@ -20,11 +20,6 @@ type ClassLevelRow = {
 type ClassFeatureRow = {
   id: string; class_id: string; level: number; name: string
   name_en: string | null; description: string | null; type: string; source: string
-}
-
-type SubclassRow = {
-  id: string; class_id: string; name: string; name_en: string | null
-  description: string | null; level_gained: number; source: string
 }
 
 type SubclassFeatureRow = {
@@ -63,13 +58,6 @@ function featureFromRow(r: ClassFeatureRow): ClassFeature {
   }
 }
 
-function subclassFromRow(r: SubclassRow): Subclass {
-  return {
-    id: r.id, classId: r.class_id, name: r.name, nameEn: r.name_en,
-    description: r.description, levelGained: r.level_gained, source: r.source,
-  }
-}
-
 function subclassFeatureFromRow(r: SubclassFeatureRow): SubclassFeature {
   return {
     id: r.id, subclassId: r.subclass_id, level: r.level, name: r.name,
@@ -93,11 +81,6 @@ export async function getClassFeatures(classId: string): Promise<ClassFeature[]>
   const { data } = await getSupabase()
     .from('class_features').select('*').eq('class_id', classId).order('level')
   return (data ?? []).map(r => featureFromRow(r as ClassFeatureRow))
-}
-
-export async function getSubclass(id: string): Promise<Subclass | null> {
-  const { data } = await getSupabase().from('subclasses').select('*').eq('id', id).single()
-  return data ? subclassFromRow(data as SubclassRow) : null
 }
 
 export async function getSubclassFeatures(subclassId: string): Promise<SubclassFeature[]> {

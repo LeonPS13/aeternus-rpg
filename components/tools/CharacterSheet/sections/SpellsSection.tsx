@@ -60,8 +60,7 @@ export default function SpellsSection({ char, onChange }: Props) {
       setCharSpells(cs)
       setAllSpells(spells)
       setClassLevel(cl)
-      setLoading(false)
-    })
+    }).finally(() => setLoading(false))
   }, [char.id, classId, char.level])
 
   const spellMap = new Map(allSpells.map(s => [s.id, s]))
@@ -100,8 +99,9 @@ export default function SpellsSection({ char, onChange }: Props) {
   }
   const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => a - b)
 
+  const knownSpellIds = new Set(charSpells.map(cs => cs.spellId))
   const pickerSpells = allSpells.filter(s => {
-    if (charSpells.some(cs => cs.spellId === s.id)) return false
+    if (knownSpellIds.has(s.id)) return false
     if (classId && !(s.classes as string[]).includes(classId)) return false
     const q = pickerSearch.toLowerCase()
     if (q && !s.name.toLowerCase().includes(q) && !translateSchool(s.school).toLowerCase().includes(q)) return false
@@ -122,16 +122,6 @@ export default function SpellsSection({ char, onChange }: Props) {
     return (
       <div className="flex items-center justify-center py-16">
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Carregando magias…</p>
-      </div>
-    )
-  }
-
-  if (!isSpellcaster && classLevel) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-          Esta classe não possui conjuração neste nível.
-        </p>
       </div>
     )
   }
@@ -235,6 +225,7 @@ export default function SpellsSection({ char, onChange }: Props) {
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.75)' }}
           onClick={() => { setShowPicker(false); setPickerSearch('') }}
+          onKeyDown={e => { if (e.key === 'Escape') { setShowPicker(false); setPickerSearch('') } }}
         >
           <div
             className="arcane-panel relative w-full max-w-lg overflow-hidden"

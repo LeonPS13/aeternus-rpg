@@ -72,7 +72,7 @@ interface Props {
 export default function AbilitiesSection({ char }: Props) {
   const [classFeatures, setClassFeatures] = useState<ClassFeature[]>([])
   const [subFeatures, setSubFeatures] = useState<SubclassFeature[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const classId = char.characterClass.toLowerCase().trim()
 
@@ -85,8 +85,7 @@ export default function AbilitiesSection({ char }: Props) {
     ]).then(([cf, sf]) => {
       setClassFeatures(cf)
       setSubFeatures(sf)
-      setLoading(false)
-    })
+    }).finally(() => setLoading(false))
   }, [classId, char.subclassId])
 
   if (!classId) {

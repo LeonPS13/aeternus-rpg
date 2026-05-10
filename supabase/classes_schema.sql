@@ -98,7 +98,7 @@ CREATE POLICY "subclass_features_open" ON subclass_features FOR ALL USING (true)
 
 -- =============================================
 -- character_spells: uma linha por personagem, spells como JSONB
--- Formato de cada item: { "spell_id": "uuid", "status": "known" | "prepared" }
+-- Formato de cada item: { "spellId": "uuid", "status": "known" | "prepared" }
 -- =============================================
 
 CREATE TABLE IF NOT EXISTS character_spells (
