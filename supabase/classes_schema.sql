@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS classes (
 );
 
 ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON classes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "classes_open" ON classes FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS class_levels (
 );
 
 ALTER TABLE class_levels ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON class_levels FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "class_levels_open" ON class_levels FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS class_features (
 );
 
 ALTER TABLE class_features ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON class_features FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "class_features_open" ON class_features FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS subclasses (
 );
 
 ALTER TABLE subclasses ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON subclasses FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "subclasses_open" ON subclasses FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS subclass_features (
 );
 
 ALTER TABLE subclass_features ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON subclass_features FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "subclass_features_open" ON subclass_features FOR ALL USING (true) WITH CHECK (true);
 
 -- =============================================
 -- character_spells: uma linha por personagem, spells como JSONB
@@ -102,20 +102,28 @@ CREATE POLICY "open" ON subclass_features FOR ALL USING (true) WITH CHECK (true)
 -- =============================================
 
 CREATE TABLE IF NOT EXISTS character_spells (
-  -- IMPORTANTE: verificar se characters.id é uuid ou text no Supabase.
-  -- Se character_id der erro de tipo, mudar para text.
   character_id uuid PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
   spells       jsonb NOT NULL DEFAULT '[]',
+  created_at   timestamptz NOT NULL DEFAULT now(),
   updated_at   timestamptz NOT NULL DEFAULT now()
 );
 
 ALTER TABLE character_spells ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "open" ON character_spells FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "character_spells_open" ON character_spells FOR ALL USING (true) WITH CHECK (true);
+
+-- =============================================
+-- Indexes
+-- =============================================
+
+CREATE INDEX IF NOT EXISTS class_levels_class_id_idx         ON class_levels (class_id);
+CREATE INDEX IF NOT EXISTS class_features_class_id_idx       ON class_features (class_id);
+CREATE INDEX IF NOT EXISTS subclasses_class_id_idx           ON subclasses (class_id);
+CREATE INDEX IF NOT EXISTS subclass_features_subclass_id_idx ON subclass_features (subclass_id);
 
 -- =============================================
 -- Alterações em characters
 -- =============================================
 
 ALTER TABLE characters
-  ADD COLUMN IF NOT EXISTS subclass_id      text REFERENCES subclasses(id),
+  ADD COLUMN IF NOT EXISTS subclass_id      text REFERENCES subclasses(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS spell_slots_used jsonb NOT NULL DEFAULT '{}';
