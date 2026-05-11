@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import { Plus, X } from 'lucide-react'
 import type { Character } from '@/types/character'
-import type { CharacterSpell, ClassLevel } from '@/types/class'
+import type { CharacterSpell, ClassEntry, ClassLevel } from '@/types/class'
 import type { SpellEntry } from '@/types/spell'
 import { getCharacterSpells, saveCharacterSpells } from '@/lib/characterSpells'
-import { getClassLevel } from '@/lib/classes'
+import { getClassById, getClassLevel } from '@/lib/classes'
 import { getSpellEntries, spellLevelLabel, spellLevelShort, translateSchool, SCHOOL_COLORS } from '@/lib/spells'
 import SpellDetail from '@/components/tools/Codex/SpellDetail'
 
@@ -45,6 +45,7 @@ export default function SpellsSection({ char, onChange }: Props) {
   const [charSpells, setCharSpells] = useState<CharacterSpell[]>([])
   const [allSpells, setAllSpells]   = useState<SpellEntry[]>([])
   const [classLevel, setClassLevel] = useState<ClassLevel | null>(null)
+  const [classEntry, setClassEntry] = useState<ClassEntry | null>(null)
   const [loading, setLoading]       = useState(true)
   const [showPicker, setShowPicker]     = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
@@ -58,10 +59,12 @@ export default function SpellsSection({ char, onChange }: Props) {
       getCharacterSpells(char.id),
       getSpellEntries(),
       getClassLevel(classId, char.level),
-    ]).then(([cs, spells, cl]) => {
+      getClassById(classId),
+    ]).then(([cs, spells, cl, ce]) => {
       setCharSpells(cs)
       setAllSpells(spells)
       setClassLevel(cl)
+      setClassEntry(ce)
     }).finally(() => setLoading(false))
   }, [char.id, classId, char.level])
 
@@ -81,6 +84,15 @@ export default function SpellsSection({ char, onChange }: Props) {
     await saveCharacterSpells(char.id, updated)
   }
 
+  async function togglePrepared(spellId: string) {
+    const updated = charSpells.map(cs =>
+      cs.spellId !== spellId ? cs
+        : { ...cs, status: (cs.status === 'prepared' ? 'known' : 'prepared') as CharacterSpell['status'] }
+    )
+    setCharSpells(updated)
+    await saveCharacterSpells(char.id, updated)
+  }
+
   async function addSpell(spell: SpellEntry) {
     if (charSpells.some(s => s.spellId === spell.id)) return
     const updated: CharacterSpell[] = [...charSpells, { spellId: spell.id, status: 'known' }]
@@ -90,7 +102,9 @@ export default function SpellsSection({ char, onChange }: Props) {
     setPickerSearch('')
   }
 
-  const isSpellcaster = !!classLevel && SLOT_KEYS.some(k => (classLevel[k] as number) > 0)
+  const isSpellcaster     = !!classLevel && SLOT_KEYS.some(k => (classLevel[k] as number) > 0)
+  const isPreparedCaster  = classEntry?.spellcastingType === 'prepared'
+  const preparedCount     = charSpells.filter(cs => cs.status === 'prepared').length
 
   const grouped = new Map<number, { entry: SpellEntry; cs: CharacterSpell }[]>()
   for (const cs of charSpells) {
@@ -168,7 +182,15 @@ export default function SpellsSection({ char, onChange }: Props) {
       {/* Spell list */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <p className="section-label">· Magias Conhecidas ·</p>
+          <div className="flex items-center gap-3">
+            <p className="section-label">· Magias Conhecidas ·</p>
+            {isPreparedCaster && preparedCount > 0 && (
+              <span className="rounded px-2 py-0.5 text-xs"
+                style={{ background: 'var(--color-gold-glow)', border: '1px solid var(--color-gold)', color: 'var(--color-gold-light)' }}>
+                {preparedCount} preparada{preparedCount !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setShowPicker(true)}
             className="arcane-btn flex items-center gap-1.5 px-3 py-1.5 text-sm"
@@ -206,9 +228,27 @@ export default function SpellsSection({ char, onChange }: Props) {
                           <span className="truncate text-base" style={{ color: 'var(--color-text-primary)' }}>
                             {entry.name}
                           </span>
-                          <span className="shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                            {cs.status === 'prepared' ? 'Preparada' : 'Conhecida'}
-                          </span>
+                          {isPreparedCaster && entry.level > 0 ? (
+                            <label
+                              className="flex shrink-0 cursor-pointer select-none items-center gap-1"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={cs.status === 'prepared'}
+                                onChange={() => togglePrepared(entry.id)}
+                              />
+                              <span className="text-xs" style={{
+                                color: cs.status === 'prepared' ? 'var(--color-gold)' : 'var(--color-text-muted)'
+                              }}>
+                                {cs.status === 'prepared' ? 'Preparada' : 'Preparar'}
+                              </span>
+                            </label>
+                          ) : (
+                            <span className="shrink-0 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                              {cs.status === 'prepared' ? 'Preparada' : 'Conhecida'}
+                            </span>
+                          )}
                         </div>
                         <button
                           onClick={e => { e.stopPropagation(); removeSpell(entry.id) }}
