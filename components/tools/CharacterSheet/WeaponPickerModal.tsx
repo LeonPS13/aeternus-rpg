@@ -6,11 +6,13 @@ import type { Character, CharacterAttack, InventoryItem, AttackStat } from '@/ty
 import type { CodexEntry } from '@/types/codex'
 import { getWeaponEntries, translateSubtype, translateDamageType } from '@/lib/codex'
 import { mod, profBonus, fmtMod } from '@/lib/character-calc'
+import { WEAPON_PROF_TO_NAMES } from '@/lib/classAutomation'
 
 interface Props {
   char: Character
   onConfirm: (attacks: CharacterAttack[], item: InventoryItem) => void
   onClose: () => void
+  weaponProficiencies?: string[]
 }
 
 const SUBTYPE_ORDER = ['simple melee', 'simple ranged', 'martial melee', 'martial ranged']
@@ -51,7 +53,7 @@ function calcDamageStr(weapon: CodexEntry, char: Character, magicBonus: number, 
   return dice
 }
 
-export default function WeaponPickerModal({ char, onConfirm, onClose }: Props) {
+export default function WeaponPickerModal({ char, onConfirm, onClose, weaponProficiencies }: Props) {
   const [weapons, setWeapons]           = useState<CodexEntry[]>([])
   const [selectedId, setSelectedId]     = useState('')
   const [magicBonus, setMagicBonus]     = useState(0)
@@ -137,8 +139,29 @@ export default function WeaponPickerModal({ char, onConfirm, onClose }: Props) {
     })
   }
 
+  const allowedSubtypes = new Set<string>()
+  const allowedNames    = new Set<string>()  // nomes PT em lowercase
+  if (weaponProficiencies && weaponProficiencies.length > 0) {
+    for (const p of weaponProficiencies) {
+      if (p === 'simple')       { allowedSubtypes.add('simple melee');  allowedSubtypes.add('simple ranged') }
+      else if (p === 'martial') { allowedSubtypes.add('martial melee'); allowedSubtypes.add('martial ranged') }
+      else {
+        const mapped = WEAPON_PROF_TO_NAMES[p]
+        if (mapped) mapped.forEach(n => allowedNames.add(n.toLowerCase()))
+        else allowedNames.add(p.replace(/_/g, ' ').toLowerCase())
+      }
+    }
+  }
+
+  function isAllowed(w: CodexEntry): boolean {
+    if (!weaponProficiencies || weaponProficiencies.length === 0) return true
+    if (w.subtype && allowedSubtypes.has(w.subtype)) return true
+    if (allowedNames.has(w.name.toLowerCase())) return true
+    return false
+  }
+
   const grouped = SUBTYPE_ORDER
-    .map(sub => ({ label: translateSubtype(sub), weapons: weapons.filter(w => w.subtype === sub) }))
+    .map(sub => ({ label: translateSubtype(sub), weapons: weapons.filter(w => w.subtype === sub && isAllowed(w)) }))
     .filter(g => g.weapons.length > 0)
 
   return (

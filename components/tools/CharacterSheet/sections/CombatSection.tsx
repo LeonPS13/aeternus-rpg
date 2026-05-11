@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Plus, Trash2, CheckCircle2, Circle, BookOpen } from 'lucide-react'
 import type { Character, CharacterAttack, InventoryItem, AttackStat } from '@/types/character'
+import type { ClassEntry } from '@/types/class'
 import {
   calcAC, calcInitiative, calcPassivePerception, calcAttackBonus, fmtMod, HIT_DICE_BY_CLASS,
   mod, STAT_TO_ATTR,
 } from '@/lib/character-calc'
+import { getClassById } from '@/lib/classes'
 import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
 import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
 
@@ -136,6 +138,13 @@ function baseWeaponName(name: string): string {
 export default function CombatSection({ char, onChange }: Props) {
   const hitDice = HIT_DICE_BY_CLASS[char.characterClass] ?? 'd8'
   const [showWeaponPicker, setShowWeaponPicker] = useState(false)
+  const [classEntry, setClassEntry] = useState<ClassEntry | null>(null)
+
+  useEffect(() => {
+    const classId = char.characterClass.toLowerCase().trim()
+    if (!classId) { setClassEntry(null); return }
+    getClassById(classId).then(setClassEntry)
+  }, [char.characterClass])
 
   function addAttack() {
     onChange({
@@ -177,6 +186,7 @@ export default function CombatSection({ char, onChange }: Props) {
           <ArmorSelector
             char={char}
             onChange={onChange}
+            proficientTypes={classEntry?.armorProficiencies}
             onItemAdd={(item: InventoryItem) => {
               if (!char.inventory.some(i => i.name === item.name)) {
                 onChange({ inventory: [...char.inventory, item] })
@@ -285,6 +295,7 @@ export default function CombatSection({ char, onChange }: Props) {
       {showWeaponPicker && (
         <WeaponPickerModal
           char={char}
+          weaponProficiencies={classEntry?.weaponProficiencies}
           onConfirm={(attacks, item) => {
             onChange({
               attacks:   [...char.attacks, ...attacks],

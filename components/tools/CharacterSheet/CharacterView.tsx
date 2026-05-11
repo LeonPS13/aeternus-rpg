@@ -13,6 +13,8 @@ import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
 import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
 import ItemPickerModal from '@/components/tools/CharacterSheet/ItemPickerModal'
 import SpellsSection from '@/components/tools/CharacterSheet/sections/SpellsSection'
+import AbilitiesSection from '@/components/tools/CharacterSheet/sections/AbilitiesSection'
+import type { CustomFeature } from '@/types/character'
 
 interface Props {
   char: Character
@@ -129,11 +131,37 @@ function updateAttack(attacks: CharacterAttack[], id: string, updates: Partial<C
   return attacks.map((a) => a.id === id ? { ...a, ...updates } : a)
 }
 
+function CustomFeatureCard({ feature, onDelete }: { feature: CustomFeature; onDelete: () => void }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="rounded p-3" style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-default)' }}>
+      <div className="flex items-start justify-between gap-2">
+        <button className="flex-1 text-left text-base" style={{ color: 'var(--color-text-primary)' }}
+          onClick={() => setOpen(o => !o)}>
+          {feature.name}
+        </button>
+        <button onClick={onDelete} className="shrink-0 rounded p-1 transition-opacity hover:opacity-70"
+          style={{ color: 'var(--color-text-muted)' }}>
+          <Trash2 size={13} />
+        </button>
+      </div>
+      {open && feature.description && (
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
+          {feature.description}
+        </p>
+      )}
+    </div>
+  )
+}
+
 export default function CharacterView({ char, onChange, onBack, onEdit, onDelete }: Props) {
   const [confirmDelete, setConfirmDelete]       = useState(false)
   const [showWeaponPicker, setShowWeaponPicker] = useState(false)
   const [showItemPicker, setShowItemPicker]     = useState(false)
   const [activeTab, setActiveTab]               = useState<'essencial' | 'bio' | 'magias'>('essencial')
+  const [showAddFeature, setShowAddFeature]     = useState(false)
+  const [newFeatureName, setNewFeatureName]     = useState('')
+  const [newFeatureDesc, setNewFeatureDesc]     = useState('')
   const pb = profBonus(char.level)
   const hitDice = HIT_DICE_BY_CLASS[char.characterClass] ?? 'd8'
 
@@ -589,10 +617,18 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
               <span className="text-base" style={{ color: 'var(--color-text-secondary)' }}>
                 {char.inventory.length > 0
                   ? (() => {
-                      const count = char.inventory.length
+                      const count       = char.inventory.length
                       const totalWeight = char.inventory.reduce((s, i) => s + i.weight * i.quantity, 0)
-                      const weightStr = totalWeight % 1 === 0 ? String(totalWeight) : totalWeight.toFixed(1)
-                      return `${count} item${count !== 1 ? 's' : ''} · ${weightStr} lb`
+                      const maxCarry    = char.strScore * 15
+                      const over        = totalWeight > maxCarry
+                      const weightStr   = totalWeight % 1 === 0 ? String(totalWeight) : totalWeight.toFixed(1)
+                      return (
+                        <>
+                          {`${count} item${count !== 1 ? 's' : ''} · ${weightStr} lb`}
+                          <span style={{ color: 'var(--color-text-muted)' }}> / Máx: {maxCarry} lb</span>
+                          {over && <span className="ml-1 font-semibold" style={{ color: '#ef4444' }}>⚠ Sobrecarregado</span>}
+                        </>
+                      )
                     })()
                   : 'Inventário vazio'}
               </span>
@@ -661,6 +697,84 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
           </div>
 
         </div>
+      </div>
+
+      {/* Habilidades */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="section-label">· Habilidades ·</p>
+          <button
+            onClick={() => { setShowAddFeature(v => !v); setNewFeatureName(''); setNewFeatureDesc('') }}
+            className="arcane-btn flex items-center gap-1.5 px-3 py-1.5 text-sm"
+          >
+            <Plus size={14} /> Adicionar
+          </button>
+        </div>
+
+        {/* Inline add form */}
+        {showAddFeature && (
+          <div className="arcane-panel p-4 space-y-3">
+            <input
+              type="text"
+              placeholder="Nome da habilidade"
+              value={newFeatureName}
+              onChange={e => setNewFeatureName(e.target.value)}
+              className="w-full rounded px-3 py-2 text-base outline-none"
+              style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-default)', color: 'var(--color-text-primary)', caretColor: 'var(--color-gold)' }}
+              autoFocus
+            />
+            <textarea
+              placeholder="Descrição (opcional)"
+              value={newFeatureDesc}
+              onChange={e => setNewFeatureDesc(e.target.value)}
+              rows={3}
+              className="w-full rounded px-3 py-2 text-sm outline-none resize-none"
+              style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-border-default)', color: 'var(--color-text-primary)', caretColor: 'var(--color-gold)' }}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (!newFeatureName.trim()) return
+                  const feat: CustomFeature = { id: crypto.randomUUID(), name: newFeatureName.trim(), description: newFeatureDesc.trim() }
+                  onChange({ customFeatures: [...(char.customFeatures ?? []), feat] })
+                  setShowAddFeature(false)
+                  setNewFeatureName('')
+                  setNewFeatureDesc('')
+                }}
+                disabled={!newFeatureName.trim()}
+                className="arcane-btn px-4 py-1.5 text-sm"
+              >
+                Salvar
+              </button>
+              <button
+                onClick={() => { setShowAddFeature(false); setNewFeatureName(''); setNewFeatureDesc('') }}
+                className="px-4 py-1.5 text-sm rounded transition-opacity hover:opacity-70"
+                style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-border-default)' }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Class + subclass features */}
+        <AbilitiesSection char={char} />
+
+        {/* Custom features */}
+        {(char.customFeatures ?? []).length > 0 && (
+          <div>
+            <p className="section-label mb-3">· Personalizadas ·</p>
+            <div className="space-y-2">
+              {(char.customFeatures ?? []).map(cf => (
+                <CustomFeatureCard
+                  key={cf.id}
+                  feature={cf}
+                  onDelete={() => onChange({ customFeatures: char.customFeatures.filter(f => f.id !== cf.id) })}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       </>}
 

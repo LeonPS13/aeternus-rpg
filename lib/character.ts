@@ -26,6 +26,9 @@ function toRow(c: Character) {
     personality_traits: c.personalityTraits, ideals: c.ideals, bonds: c.bonds, flaws: c.flaws,
     subclass_id: c.subclassId,
     spell_slots_used: c.spellSlotsUsed,
+    custom_features: c.customFeatures,
+    subrace: c.subrace,
+    racial_asi: c.racialAsi,
   }
 }
 
@@ -63,6 +66,9 @@ function fromRow(r: any): Character {
     bonds: r.bonds ?? '', flaws: r.flaws ?? '',
     subclassId: r.subclass_id ?? null,
     spellSlotsUsed: (r.spell_slots_used as Record<string, number>) ?? {},
+    customFeatures: r.custom_features ?? [],
+    subrace: r.subrace ?? '',
+    racialAsi: (r.racial_asi as Partial<Record<string, number>>) ?? {},
   }
 }
 

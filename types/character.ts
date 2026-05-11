@@ -17,6 +17,12 @@ export const ALIGNMENTS = [
 export const ARMOR_TYPES = ['none', 'light', 'medium', 'heavy'] as const
 export type ArmorType = (typeof ARMOR_TYPES)[number]
 
+export interface CustomFeature {
+  id: string
+  name: string
+  description: string
+}
+
 export const SKILL_NAMES = [
   'acrobatics', 'arcana', 'athletics', 'performance', 'deception',
   'stealth', 'history', 'intimidation', 'insight', 'investigation',
@@ -121,4 +127,7 @@ export interface Character {
   flaws: string
   subclassId: string | null
   spellSlotsUsed: Record<string, number>
+  customFeatures: CustomFeature[]
+  subrace: string
+  racialAsi: Partial<Record<string, number>>
 }

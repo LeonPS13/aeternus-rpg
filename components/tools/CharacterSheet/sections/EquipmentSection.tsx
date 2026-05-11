@@ -110,7 +110,20 @@ export default function EquipmentSection({ char, onChange }: Props) {
       )}
       <div className="arcane-panel p-4">
         <div className="mb-4 flex items-center justify-between">
-          <p className="section-label">· Inventário ·</p>
+          <div className="flex items-center gap-3">
+            <p className="section-label">· Inventário ·</p>
+            {(() => {
+              const totalWeight = char.inventory.reduce((s, i) => s + i.weight * i.quantity, 0)
+              const maxCarry   = char.strScore * 15
+              const over       = totalWeight > maxCarry
+              return (
+                <span className="text-xs" style={{ color: over ? '#ef4444' : 'var(--color-text-muted)' }}>
+                  {totalWeight} lb / Máx: {maxCarry} lb
+                  {over && <span className="ml-1 font-semibold">⚠ Sobrecarregado</span>}
+                </span>
+              )
+            })()}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowItemPicker(true)}

@@ -45,7 +45,7 @@ CSS custom properties definidas em `app/globals.css`. Variáveis: `--color-bg-pr
 
 ## Supabase
 
-**Projeto:** `zgebucfjvvctunnpdijn` (não conectado ao MCP do Claude)
+**Projeto:** `zgebucfjvvctunnpdijn`
 
 **Tabelas:** `adventures`, `adventure_memberships`, `diary_entries`, `characters`, `codex`
 
@@ -53,7 +53,10 @@ CSS custom properties definidas em `app/globals.css`. Variáveis: `--color-bg-pr
 
 RLS habilitado com políticas abertas (MVP). `lib/supabase.ts` exporta `getSupabase()` singleton.
 
-Migração: `ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'BookOpen';` (já aplicada em prod; code tem fallback).
+Migrações aplicadas em prod:
+- `ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT 'BookOpen';`
+- `ALTER TABLE characters ADD COLUMN IF NOT EXISTS subrace TEXT DEFAULT '';`
+- `ALTER TABLE characters ADD COLUMN IF NOT EXISTS racial_asi JSONB DEFAULT '{}';`
 
 ---
 
@@ -69,11 +72,40 @@ Migração: `ALTER TABLE adventures ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT '
 
 ---
 
+## Automação da Ficha
+
+### Classe (`lib/classAutomation.ts`)
+- `applyClassDefaults(cls)` — aplica saving throws, speed, proficiências ao selecionar classe
+- `applyRaceDefaults(entry, prevRacialAsi, scores)` — reverte ASI anterior e aplica novo; atualiza `speed` e `racialAsi`
+- `buildFeaturesTraitsText(raceEntry, activeSubrace)` — gera texto de traços raciais para `featuresTraits`
+- `buildProficienciesText(cls)` — gera texto de proficiências para `otherProficiencies`
+- `WEAPON_PROF_TO_NAMES` — mapa de chave DB snake_case inglês → nome PT do codex (para filtro de armas por proficiência)
+
+### Raça (`lib/races.ts`, `types/race.ts`)
+- 9 raças do SRD implementadas como dados estáticos em `lib/races.ts`
+- Raças com sub-raças: Dwarf, Elf, Halfling, Gnome
+- Raças sem sub-raças: Human, Dragonborn, Half-Elf, Half-Orc, Tiefling
+- `getRaceByNameEn(nameEn)` — lookup por nome EN (corresponde ao valor de `char.race`)
+- `Character` tem `subrace: string` e `racialAsi: Partial<Record<string, number>>`
+- Meio-Elfo: apenas CAR +2 automático; +1 em 2 atributos fica como nota para o jogador
+
+### Filtros por proficiência de classe
+- **Armas** (`WeaponPickerModal`): recebe `weaponProficiencies?: string[]`; filtra usando `WEAPON_PROF_TO_NAMES` para converter chaves EN → nomes PT do codex
+- **Armaduras** (`ArmorSelector`): recebe `proficientTypes?: string[]`; `undefined` = sem classe (mostra tudo), `[]` = sem proficiência (mostra nada)
+
+### Peso de carga
+- Fórmula: `strScore × 15` lb (D&D 5e SRD)
+- Exibido em `EquipmentSection` (edição) e `CharacterView` (leitura)
+- Aviso vermelho "⚠ Sobrecarregado" se peso atual > máximo
+
+---
+
 ## Quirks conhecidos
 
 - **ArmorSelector:** restaura dropdown via `useEffect` quando armaduras carregam do Codex — sem isso volta a "Sem armadura" ao reabrir ficha
 - **CombatSection:** tabela de ataques usa `.attack-row`/`.attack-col` (globals.css) + `StatDropdown` customizado, não `<select>` nativo
 - **Codex:** cache module-level em `Codex/index.tsx` — não re-faz fetch ao navegar de volta
+- **IdentitySection:** `applyRaceDefaults` precisa dos scores atuais e do `racialAsi` anterior para calcular o delta corretamente — não chamar com `char` stale
 
 ---
 

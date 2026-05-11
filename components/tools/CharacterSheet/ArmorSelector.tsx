@@ -12,6 +12,7 @@ interface Props {
   onChange: (u: Partial<Character>) => void
   onItemAdd: (item: InventoryItem) => void
   onItemRemove: (name: string) => void
+  proficientTypes?: string[]
 }
 
 const inputStyle = {
@@ -24,7 +25,7 @@ const inputStyle = {
 
 const ARMOR_SUBTYPE_ORDER = ['light', 'medium', 'heavy']
 
-export default function ArmorSelector({ char, onChange, onItemAdd, onItemRemove }: Props) {
+export default function ArmorSelector({ char, onChange, onItemAdd, onItemRemove, proficientTypes }: Props) {
   const [armors, setArmors]                   = useState<CodexEntry[]>([])
   const [selectedArmorId, setSelectedArmorId] = useState('')
   const [selectedShieldId, setSelectedShieldId] = useState('')
@@ -33,8 +34,17 @@ export default function ArmorSelector({ char, onChange, onItemAdd, onItemRemove 
     getArmorEntries().then(setArmors)
   }, [])
 
-  const armorList  = armors.filter(a => a.subtype !== 'shield')
+  const hasFilter = proficientTypes !== undefined
+  const profSet   = new Set(proficientTypes ?? [])
+
+  // undefined = sem classe selecionada, mostra tudo; [] = classe sem armadura, mostra nada
+  const armorList  = armors.filter(a => {
+    if (a.subtype === 'shield') return false
+    if (!hasFilter) return true
+    return a.subtype !== null && profSet.has(a.subtype)
+  })
   const shieldList = armors.filter(a => a.subtype === 'shield')
+  const showShield = !hasFilter || profSet.has('shields')
 
   // Restore dropdown selection from saved character data when armors load
   useEffect(() => {
@@ -140,24 +150,26 @@ export default function ArmorSelector({ char, onChange, onItemAdd, onItemRemove 
         </div>
 
         {/* Shield dropdown */}
-        <div>
-          <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            Escudo
-          </label>
-          <select
-            value={selectedShieldId}
-            onChange={e => handleShieldChange(e.target.value)}
-            className="w-full px-2 py-1.5 text-sm"
-            style={inputStyle}
-          >
-            <option value="">Sem escudo</option>
-            {shieldList.map(s => (
-              <option key={s.id} value={s.id}>
-                {s.name} (+{(s.data.ac_bonus as number) ?? 2} CA)
-              </option>
-            ))}
-          </select>
-        </div>
+        {showShield && (
+          <div>
+            <label className="mb-1 block text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              Escudo
+            </label>
+            <select
+              value={selectedShieldId}
+              onChange={e => handleShieldChange(e.target.value)}
+              className="w-full px-2 py-1.5 text-sm"
+              style={inputStyle}
+            >
+              <option value="">Sem escudo</option>
+              {shieldList.map(s => (
+                <option key={s.id} value={s.id}>
+                  {s.name} (+{(s.data.ac_bonus as number) ?? 2} CA)
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* CA preview + info */}
