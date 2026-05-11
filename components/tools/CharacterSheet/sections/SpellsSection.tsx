@@ -8,6 +8,7 @@ import type { SpellEntry } from '@/types/spell'
 import { getCharacterSpells, saveCharacterSpells } from '@/lib/characterSpells'
 import { getClassLevel } from '@/lib/classes'
 import { getSpellEntries, spellLevelLabel, spellLevelShort, translateSchool, SCHOOL_COLORS } from '@/lib/spells'
+import SpellDetail from '@/components/tools/Codex/SpellDetail'
 
 const SLOT_KEYS: (keyof ClassLevel)[] = [
   'slot1','slot2','slot3','slot4','slot5','slot6','slot7','slot8','slot9',
@@ -45,8 +46,9 @@ export default function SpellsSection({ char, onChange }: Props) {
   const [allSpells, setAllSpells]   = useState<SpellEntry[]>([])
   const [classLevel, setClassLevel] = useState<ClassLevel | null>(null)
   const [loading, setLoading]       = useState(true)
-  const [showPicker, setShowPicker] = useState(false)
+  const [showPicker, setShowPicker]     = useState(false)
   const [pickerSearch, setPickerSearch] = useState('')
+  const [selectedSpell, setSelectedSpell] = useState<SpellEntry | null>(null)
 
   const classId = char.characterClass.toLowerCase().trim()
 
@@ -99,10 +101,15 @@ export default function SpellsSection({ char, onChange }: Props) {
   }
   const sortedGroups = Array.from(grouped.entries()).sort(([a], [b]) => a - b)
 
+  const maxSpellLevel = classLevel
+    ? SLOT_KEYS.reduce((max, key, i) => ((classLevel[key] as number) > 0 ? i + 1 : max), 0)
+    : 0
+
   const knownSpellIds = new Set(charSpells.map(cs => cs.spellId))
   const pickerSpells = allSpells.filter(s => {
     if (knownSpellIds.has(s.id)) return false
     if (classId && !(s.classes as string[]).includes(classId)) return false
+    if (s.level > 0 && s.level > maxSpellLevel) return false
     const q = pickerSearch.toLowerCase()
     if (q && !s.name.toLowerCase().includes(q) && !translateSchool(s.school).toLowerCase().includes(q)) return false
     return true
@@ -187,8 +194,9 @@ export default function SpellsSection({ char, onChange }: Props) {
                     return (
                       <div
                         key={entry.id}
-                        className="flex items-center justify-between rounded p-2.5"
+                        className="flex cursor-pointer items-center justify-between rounded p-2.5 transition-opacity hover:opacity-80"
                         style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-default)' }}
+                        onClick={() => setSelectedSpell(entry)}
                       >
                         <div className="flex min-w-0 items-center gap-2">
                           <span className="shrink-0 rounded px-1.5 py-0.5 text-xs leading-none"
@@ -203,7 +211,7 @@ export default function SpellsSection({ char, onChange }: Props) {
                           </span>
                         </div>
                         <button
-                          onClick={() => removeSpell(entry.id)}
+                          onClick={e => { e.stopPropagation(); removeSpell(entry.id) }}
                           className="ml-2 shrink-0 rounded p-1"
                           style={{ color: 'var(--color-text-muted)' }}
                         >
@@ -218,6 +226,11 @@ export default function SpellsSection({ char, onChange }: Props) {
           </div>
         )}
       </div>
+
+      {/* Spell detail modal */}
+      {selectedSpell && (
+        <SpellDetail spell={selectedSpell} onClose={() => setSelectedSpell(null)} />
+      )}
 
       {/* Spell picker modal */}
       {showPicker && (
