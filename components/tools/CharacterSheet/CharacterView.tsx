@@ -12,6 +12,7 @@ import {
 import ArmorSelector from '@/components/tools/CharacterSheet/ArmorSelector'
 import WeaponPickerModal from '@/components/tools/CharacterSheet/WeaponPickerModal'
 import ItemPickerModal from '@/components/tools/CharacterSheet/ItemPickerModal'
+import SpellsSection from '@/components/tools/CharacterSheet/sections/SpellsSection'
 
 interface Props {
   char: Character
@@ -132,6 +133,7 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
   const [confirmDelete, setConfirmDelete]       = useState(false)
   const [showWeaponPicker, setShowWeaponPicker] = useState(false)
   const [showItemPicker, setShowItemPicker]     = useState(false)
+  const [activeTab, setActiveTab]               = useState<'essencial' | 'bio' | 'magias'>('essencial')
   const pb = profBonus(char.level)
   const hitDice = HIT_DICE_BY_CLASS[char.characterClass] ?? 'd8'
 
@@ -243,6 +245,24 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
         )}
       </div>
 
+      {/* Tab selector */}
+      <div className="mb-6 flex gap-1 border-b" style={{ borderColor: 'var(--color-border-default)' }}>
+        {(['essencial', 'bio', 'magias'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="px-4 py-2 text-sm transition-colors"
+            style={{
+              color: activeTab === tab ? 'var(--color-gold-light)' : 'var(--color-text-muted)',
+              borderBottom: activeTab === tab ? '2px solid var(--color-gold)' : '2px solid transparent',
+              marginBottom: '-1px',
+            }}>
+            {tab === 'essencial' ? 'Essencial' : tab === 'bio' ? 'Bio' : 'Magias'}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'essencial' && <>
       {/* Key stats */}
       <div className="mb-6 grid grid-cols-4 gap-2 sm:grid-cols-7">
         <StatPill label="CA" value={calcAC(char)} />
@@ -640,22 +660,31 @@ export default function CharacterView({ char, onChange, onBack, onEdit, onDelete
             )}
           </div>
 
-          {/* Traços */}
-          {(char.personalityTraits || char.ideals || char.bonds || char.flaws || char.featuresTraits || char.otherProficiencies) && (
-            <div className="arcane-panel p-4">
-              <p className="section-label mb-3">· Traços e Características ·</p>
-              <div className="space-y-3">
-                {char.personalityTraits && <TraitBlock label="Traços de Personalidade" text={char.personalityTraits} />}
-                {char.ideals           && <TraitBlock label="Ideais"                   text={char.ideals} />}
-                {char.bonds            && <TraitBlock label="Vínculos"                 text={char.bonds} />}
-                {char.flaws            && <TraitBlock label="Defeitos"                 text={char.flaws} />}
-                {char.featuresTraits   && <TraitBlock label="Habilidades de Classe/Raça" text={char.featuresTraits} />}
-                {char.otherProficiencies && <TraitBlock label="Proficiências e Idiomas" text={char.otherProficiencies} />}
-              </div>
-            </div>
-          )}
         </div>
       </div>
+      </>}
+
+      {activeTab === 'bio' && (
+        <div className="arcane-panel p-4">
+          <p className="section-label mb-3">· Traços e Características ·</p>
+          <div className="space-y-3">
+            {char.personalityTraits  && <TraitBlock label="Traços de Personalidade"    text={char.personalityTraits} />}
+            {char.ideals             && <TraitBlock label="Ideais"                      text={char.ideals} />}
+            {char.bonds              && <TraitBlock label="Vínculos"                    text={char.bonds} />}
+            {char.flaws              && <TraitBlock label="Defeitos"                    text={char.flaws} />}
+            {char.featuresTraits     && <TraitBlock label="Habilidades de Classe/Raça" text={char.featuresTraits} />}
+            {char.otherProficiencies && <TraitBlock label="Proficiências e Idiomas"    text={char.otherProficiencies} />}
+          </div>
+          {!char.personalityTraits && !char.ideals && !char.bonds && !char.flaws
+            && !char.featuresTraits && !char.otherProficiencies && (
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Nenhum traço preenchido.</p>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'magias' && (
+        <SpellsSection char={char} onChange={onChange} />
+      )}
     </div>
   )
 }
